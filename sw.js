@@ -1,7 +1,5 @@
-const CACHE_NAME = "read-together-shell-v1";
+const CACHE_NAME = "read-together-shell-v2";
 const APP_SHELL = [
-    "./",
-    "./index.php",
     "./offline.html",
     "./assets/css/app.css",
     "./assets/js/app.js",
@@ -41,11 +39,7 @@ self.addEventListener("fetch", (event) => {
     if (request.mode === "navigate") {
         event.respondWith(
             fetch(request)
-                .catch(async () => {
-                    const cachedPage = await caches.match(request, { ignoreSearch: true })
-                        || await caches.match("./index.php");
-                    return cachedPage || caches.match("./offline.html");
-                })
+                .catch(() => caches.match("./offline.html"))
         );
         return;
     }

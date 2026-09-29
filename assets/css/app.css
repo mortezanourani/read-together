@@ -52,3 +52,103 @@ h1 {
     font-size: clamp(1.05rem, 3vw, 1.25rem);
     line-height: 1.6;
 }
+
+.auth-card {
+    width: min(100%, 34rem);
+}
+
+.auth-form {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 2rem;
+}
+
+.auth-form label {
+    color: #20352c;
+    font-size: 0.95rem;
+    font-weight: 650;
+}
+
+.auth-form input {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #cbd4ca;
+    border-radius: 0.55rem;
+    background: #fff;
+    color: #20352c;
+    font: inherit;
+}
+
+.auth-form input:focus-visible {
+    outline: 3px solid rgb(49 92 75 / 25%);
+    border-color: #315c4b;
+}
+
+.field-hint {
+    margin: 0;
+    color: #68736a;
+    font-size: 0.85rem;
+}
+
+.button {
+    min-height: 3rem;
+    margin-top: 0.5rem;
+    padding: 0.75rem 1rem;
+    border: 0;
+    border-radius: 0.55rem;
+    background: #315c4b;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 650;
+}
+
+.button:hover:not(:disabled) {
+    background: #254a3b;
+}
+
+.button:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.button-secondary {
+    margin-top: 1.5rem;
+    border: 1px solid #315c4b;
+    background: transparent;
+    color: #315c4b;
+}
+
+.button-secondary:hover:not(:disabled) {
+    background: #edf2ed;
+}
+
+.verification-form {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e5e2d8;
+}
+
+.message {
+    margin: 1.25rem 0 0;
+    padding: 0.85rem 1rem;
+    border-radius: 0.55rem;
+    background: #edf2ed;
+    color: #315c4b;
+    line-height: 1.5;
+}
+
+.message-error {
+    background: #fff0ed;
+    color: #8b3025;
+}
+
+.message-success {
+    background: #edf6ef;
+}
+
+.account-role {
+    margin: 0.75rem 0 0;
+    color: #68736a;
+}
