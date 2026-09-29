@@ -37,7 +37,6 @@ function install_schema(PDO $connection): void
     );
 
     install_group_schema($connection);
-    install_chapter_schema($connection);
 
     $statement = $connection->prepare(
         "INSERT IGNORE INTO roles (name) VALUES (:admin), (:user)"
@@ -50,12 +49,18 @@ function install_schema(PDO $connection): void
 
 function install_group_schema(PDO $connection): void
 {
+    install_chapter_schema($connection);
+
     $connection->exec(
         "CREATE TABLE IF NOT EXISTS `groups` (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             name VARCHAR(100) NOT NULL,
             invite_code CHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
             created_by BIGINT UNSIGNED NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'setup',
+            assignments_start_date DATE NULL,
+            cycle_number INT UNSIGNED NOT NULL DEFAULT 0,
+            deactivated_at DATETIME NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             UNIQUE KEY uq_groups_invite_code (invite_code),
@@ -69,6 +74,7 @@ function install_group_schema(PDO $connection): void
         "CREATE TABLE IF NOT EXISTS group_members (
             group_id BIGINT UNSIGNED NOT NULL,
             account_id BIGINT UNSIGNED NOT NULL,
+            daily_chapter_count TINYINT UNSIGNED NULL,
             joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (group_id, account_id),
             KEY ix_group_members_account (account_id),
@@ -78,6 +84,87 @@ function install_group_schema(PDO $connection): void
                 REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     );
+
+    ensure_column($connection, 'groups', 'status', "VARCHAR(16) NOT NULL DEFAULT 'setup'");
+    ensure_column($connection, 'groups', 'assignments_start_date', 'DATE NULL');
+    ensure_column($connection, 'groups', 'cycle_number', 'INT UNSIGNED NOT NULL DEFAULT 0');
+    ensure_column($connection, 'groups', 'deactivated_at', 'DATETIME NULL');
+    ensure_column($connection, 'group_members', 'daily_chapter_count', 'TINYINT UNSIGNED NULL');
+    $connection->exec(
+        "CREATE TABLE IF NOT EXISTS group_cycles (
+            group_id BIGINT UNSIGNED NOT NULL,
+            cycle_number INT UNSIGNED NOT NULL,
+            starts_on DATE NOT NULL,
+            status VARCHAR(16) NOT NULL DEFAULT 'active',
+            PRIMARY KEY (group_id, cycle_number),
+            UNIQUE KEY uq_group_cycles_start (group_id, starts_on),
+            CONSTRAINT fk_group_cycles_group FOREIGN KEY (group_id)
+                REFERENCES `groups` (id) ON UPDATE CASCADE ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+    $connection->exec(
+        "CREATE TABLE IF NOT EXISTS group_cycle_members (
+            group_id BIGINT UNSIGNED NOT NULL,
+            cycle_number INT UNSIGNED NOT NULL,
+            account_id BIGINT UNSIGNED NOT NULL,
+            member_order SMALLINT UNSIGNED NOT NULL,
+            daily_chapter_count TINYINT UNSIGNED NOT NULL,
+            PRIMARY KEY (group_id, cycle_number, account_id),
+            UNIQUE KEY uq_group_cycle_member_order (group_id, cycle_number, member_order),
+            CONSTRAINT fk_group_cycle_members_cycle FOREIGN KEY (group_id, cycle_number)
+                REFERENCES group_cycles (group_id, cycle_number) ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_group_cycle_members_account FOREIGN KEY (account_id)
+                REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+    $connection->exec(
+        "CREATE TABLE IF NOT EXISTS reading_reports (
+            group_id BIGINT UNSIGNED NOT NULL,
+            account_id BIGINT UNSIGNED NOT NULL,
+            chapter_id BIGINT UNSIGNED NOT NULL,
+            cycle_number INT UNSIGNED NOT NULL,
+            assignment_date DATE NOT NULL,
+            submitted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (group_id, account_id, chapter_id, cycle_number, assignment_date),
+            KEY ix_reading_reports_group_date (group_id, assignment_date),
+            CONSTRAINT fk_reading_reports_group FOREIGN KEY (group_id)
+                REFERENCES `groups` (id) ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_reading_reports_account FOREIGN KEY (account_id)
+                REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_reading_reports_chapter FOREIGN KEY (chapter_id)
+                REFERENCES chapters (id) ON UPDATE CASCADE ON DELETE RESTRICT
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+}
+
+function ensure_column(PDO $connection, string $table, string $column, string $definition): void
+{
+    $statement = $connection->prepare(
+        'SELECT COUNT(*) FROM information_schema.columns
+         WHERE table_schema = DATABASE() AND table_name = :table_name
+           AND column_name = :column_name'
+    );
+    $statement->execute([
+        'table_name' => $table,
+        'column_name' => $column,
+    ]);
+
+    if ((int) $statement->fetchColumn() === 0) {
+        try {
+            $connection->exec(
+                'ALTER TABLE `' . str_replace('`', '``', $table) . '` ADD COLUMN `'
+                . str_replace('`', '``', $column) . '` ' . $definition
+            );
+        } catch (PDOException $exception) {
+            $statement->execute([
+                'table_name' => $table,
+                'column_name' => $column,
+            ]);
+            if ((int) $statement->fetchColumn() === 0) {
+                throw $exception;
+            }
+        }
+    }
 }
 
 function group_schema_is_installed(PDO $connection): bool
@@ -93,9 +180,7 @@ function group_schema_is_installed(PDO $connection): bool
 
 function ensure_group_schema(PDO $connection): void
 {
-    if (!group_schema_is_installed($connection)) {
-        install_group_schema($connection);
-    }
+    install_group_schema($connection);
 }
 
 function install_chapter_schema(PDO $connection): void

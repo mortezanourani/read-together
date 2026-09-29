@@ -1,6 +1,6 @@
 <?php
 require_once dirname(__DIR__) . '/includes/bootstrap.php';
-require_once dirname(__DIR__) . '/includes/schema.php';
+require_once dirname(__DIR__) . '/includes/assignments.php';
 
 if (empty($_SESSION['account_id'])) {
     header('Location: ../login.php');
@@ -30,7 +30,7 @@ if (!$account || $account['role'] !== 'Admin') {
 }
 
 try {
-    ensure_chapter_schema($connection);
+    ensure_group_schema($connection);
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
     http_response_code(503);
@@ -152,6 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                 }
 
                 if ($error === '') {
+                    start_ready_group_cycles($connection);
                     header('Location: chapters.php?saved=1');
                     exit;
                 }

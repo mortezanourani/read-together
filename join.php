@@ -28,7 +28,7 @@ if ($error === '') {
     try {
         ensure_group_schema(database());
         $findGroup = database()->prepare(
-            'SELECT id, name FROM `groups` WHERE invite_code = :invite_code'
+            'SELECT id, name, status FROM `groups` WHERE invite_code = :invite_code'
         );
         $findGroup->execute(['invite_code' => $code]);
         $group = $findGroup->fetch();
@@ -36,6 +36,9 @@ if ($error === '') {
         if (!$group) {
             http_response_code(404);
             $error = 'This invitation code does not match a group.';
+        } elseif ($group['status'] !== 'setup') {
+            $error = 'This group is not accepting members during its current reading cycle.';
+            $group = false;
         }
     } catch (PDOException $exception) {
         error_log($exception->getMessage());
@@ -49,18 +52,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '' && $group) {
         $error = 'Your session expired. Refresh the page and try again.';
     } else {
         try {
-            $membership = database()->prepare(
-                'INSERT IGNORE INTO group_members (group_id, account_id)
-                 VALUES (:group_id, :account_id)'
+            $connection = database();
+            $connection->beginTransaction();
+            $lockGroup = $connection->prepare(
+                'SELECT status FROM `groups` WHERE id = :id FOR UPDATE'
             );
-            $membership->execute([
-                'group_id' => $group['id'],
-                'account_id' => $_SESSION['account_id'],
-            ]);
+            $lockGroup->execute(['id' => $group['id']]);
+            if ($lockGroup->fetchColumn() !== 'setup') {
+                $connection->rollBack();
+                $error = 'This group is no longer accepting members.';
+            } else {
+                $membership = $connection->prepare(
+                    'INSERT IGNORE INTO group_members (group_id, account_id)
+                     VALUES (:group_id, :account_id)'
+                );
+                $membership->execute([
+                    'group_id' => $group['id'],
+                    'account_id' => $_SESSION['account_id'],
+                ]);
+                $connection->commit();
+            }
+            if ($error !== '') {
+                throw new RuntimeException($error);
+            }
             unset($_SESSION['pending_invite_code']);
             header('Location: group.php?id=' . (int) $group['id'] . '&joined=1');
             exit;
+        } catch (RuntimeException $exception) {
+            $error = $exception->getMessage();
         } catch (PDOException $exception) {
+            if (isset($connection) && $connection->inTransaction()) {
+                $connection->rollBack();
+            }
             error_log($exception->getMessage());
             $error = 'Could not join this group. Please try again.';
         }

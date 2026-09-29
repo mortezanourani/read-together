@@ -35,7 +35,7 @@ try {
                 COUNT(group_members.account_id) AS member_count
          FROM `groups`
          INNER JOIN group_members ON group_members.group_id = `groups`.id
-         WHERE group_members.account_id = :account_id
+         WHERE group_members.account_id = :account_id AND `groups`.status <> `deactivated`
          GROUP BY `groups`.id, `groups`.name, `groups`.invite_code
          ORDER BY `groups`.name'
     );
