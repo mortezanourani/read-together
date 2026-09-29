@@ -36,6 +36,8 @@ function install_schema(PDO $connection): void
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     );
 
+    install_group_schema($connection);
+
     $statement = $connection->prepare(
         "INSERT IGNORE INTO roles (name) VALUES (:admin), (:user)"
     );
@@ -43,6 +45,56 @@ function install_schema(PDO $connection): void
         'admin' => 'Admin',
         'user' => 'User',
     ]);
+}
+
+function install_group_schema(PDO $connection): void
+{
+    $connection->exec(
+        "CREATE TABLE IF NOT EXISTS `groups` (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            name VARCHAR(100) NOT NULL,
+            invite_code CHAR(12) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
+            created_by BIGINT UNSIGNED NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uq_groups_invite_code (invite_code),
+            KEY ix_groups_created_by (created_by),
+            CONSTRAINT fk_groups_created_by FOREIGN KEY (created_by)
+                REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE RESTRICT
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+
+    $connection->exec(
+        "CREATE TABLE IF NOT EXISTS group_members (
+            group_id BIGINT UNSIGNED NOT NULL,
+            account_id BIGINT UNSIGNED NOT NULL,
+            joined_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (group_id, account_id),
+            KEY ix_group_members_account (account_id),
+            CONSTRAINT fk_group_members_group FOREIGN KEY (group_id)
+                REFERENCES `groups` (id) ON UPDATE CASCADE ON DELETE CASCADE,
+            CONSTRAINT fk_group_members_account FOREIGN KEY (account_id)
+                REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+}
+
+function group_schema_is_installed(PDO $connection): bool
+{
+    $statement = $connection->query(
+        "SELECT COUNT(*) FROM information_schema.tables
+         WHERE table_schema = DATABASE()
+           AND table_name IN ('groups', 'group_members')"
+    );
+
+    return (int) $statement->fetchColumn() === 2;
+}
+
+function ensure_group_schema(PDO $connection): void
+{
+    if (!group_schema_is_installed($connection)) {
+        install_group_schema($connection);
+    }
 }
 
 function schema_is_installed(PDO $connection): bool

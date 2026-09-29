@@ -8,6 +8,9 @@ define('DB_USER', 'root');
 define('DB_PASSWORD', '');
 define('DB_CHARSET', 'utf8mb4');
 
+// Use the public base URL of the app when showing shareable invitation links.
+define('APP_URL', 'http://localhost/readtogether');
+
 // Set a long, unique value before opening install.php. Clear it after setup.
 define('INSTALLATION_KEY', '');
 

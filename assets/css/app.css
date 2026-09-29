@@ -152,3 +152,281 @@ h1 {
     margin: 0.75rem 0 0;
     color: #68736a;
 }
+
+.home-page {
+    width: min(100%, 68rem);
+    padding: clamp(1.5rem, 5vw, 3rem);
+}
+
+.page-header,
+.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.page-header {
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #e5e2d8;
+}
+
+.page-header h1 {
+    font-size: clamp(2.5rem, 7vw, 4rem);
+}
+
+.page-header .intro {
+    margin-top: 0.75rem;
+}
+
+.page-header .button {
+    flex-shrink: 0;
+}
+
+.home-section {
+    margin-top: 2.5rem;
+}
+
+.section-heading {
+    margin-bottom: 1rem;
+}
+
+.section-heading .eyebrow {
+    margin-bottom: 0.4rem;
+}
+
+.section-heading h2,
+.group-info-section h2 {
+    margin: 0;
+    color: #315c4b;
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+}
+
+.group-total {
+    display: inline-grid;
+    min-width: 2rem;
+    min-height: 2rem;
+    place-items: center;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    background: #edf2ed;
+    color: #315c4b;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.empty-state {
+    margin: 0;
+    padding: 1.5rem;
+    border: 1px dashed #cbd4ca;
+    border-radius: 0.85rem;
+    color: #5d685f;
+    line-height: 1.6;
+}
+
+.group-grid,
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: 1rem;
+}
+
+.group-card,
+.action-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    padding: 1.25rem;
+    border: 1px solid #e5e2d8;
+    border-radius: 0.9rem;
+    background: #fffefa;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+
+.group-card:hover,
+.action-card[href]:hover {
+    transform: translateY(-2px);
+    border-color: #a9c0ae;
+    box-shadow: 0 0.75rem 2rem rgb(32 53 44 / 7%);
+}
+
+.group-card-mark,
+.action-icon {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 0.75rem;
+    background: #edf2ed;
+    color: #315c4b;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.group-card-content,
+.action-copy {
+    display: grid;
+    flex: 1;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.group-card-content strong,
+.action-copy strong {
+    overflow-wrap: anywhere;
+    color: #20352c;
+    font-size: 1.05rem;
+}
+
+.group-card-content > span,
+.action-copy > span {
+    color: #68736a;
+    font-size: 0.9rem;
+}
+
+.group-card-arrow {
+    flex: 0 0 auto;
+    color: #527664;
+    font-size: 1.3rem;
+}
+
+.action-grid {
+    margin-top: 1.25rem;
+}
+
+.action-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+.action-card-create {
+    text-decoration: none;
+}
+
+.action-card-create .action-icon {
+    background: #315c4b;
+    color: #fff;
+}
+
+.action-card-join {
+    align-content: flex-start;
+}
+
+.join-inline-form {
+    display: flex;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.join-inline-form input {
+    width: 100%;
+    min-width: 0;
+    min-height: 3rem;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid #cbd4ca;
+    border-radius: 0.55rem;
+    color: #20352c;
+    font: inherit;
+}
+
+.join-inline-form .button {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 2rem;
+    color: #527664;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    color: #20352c;
+    text-decoration: underline;
+}
+
+.group-info-section {
+    margin-top: 2rem;
+}
+
+.section-copy {
+    margin: 0.65rem 0 1rem;
+    color: #68736a;
+    line-height: 1.55;
+}
+
+.invite-code {
+    display: block;
+    width: 100%;
+    padding: 1rem;
+    border: 1px dashed #a9c0ae;
+    border-radius: 0.65rem;
+    background: #f4f7f1;
+    color: #315c4b;
+    font-size: 1.35rem;
+    font-weight: 750;
+    letter-spacing: 0.12em;
+    text-align: center;
+    cursor: pointer;
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.copy-invite-button {
+    width: 100%;
+}
+
+.copy-status {
+    min-height: 1.4em;
+    margin: 0.5rem 0 0;
+    color: #315c4b;
+    font-size: 0.9rem;
+}
+
+.invite-link {
+    display: block;
+    margin-top: 0.85rem;
+    color: #315c4b;
+    overflow-wrap: anywhere;
+}
+
+.member-list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.member-list li {
+    padding: 0.85rem 1rem;
+    border: 1px solid #e5e2d8;
+    border-radius: 0.6rem;
+    background: #fffefa;
+}
+
+@media (max-width: 540px) {
+    .home-page {
+        padding: 1.25rem;
+    }
+
+    .page-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}

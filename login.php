@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/includes/bootstrap.php';
+require_once __DIR__ . '/includes/groups.php';
 require_once __DIR__ . '/includes/schema.php';
 require_once __DIR__ . '/includes/sms.php';
 
@@ -153,6 +154,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                         session_regenerate_id(true);
                         $_SESSION['account_id'] = (int) $account['id'];
                         unset($_SESSION['otp_phone']);
+
+                        $pendingInviteCode = normalize_invite_code(
+                            (string) ($_SESSION['pending_invite_code'] ?? '')
+                        );
+                        if ($pendingInviteCode !== null) {
+                            unset($_SESSION['pending_invite_code']);
+                            header('Location: join.php?code=' . rawurlencode($pendingInviteCode));
+                            exit;
+                        }
+
                         header('Location: index.php');
                         exit;
                     }
