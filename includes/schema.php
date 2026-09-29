@@ -37,6 +37,7 @@ function install_schema(PDO $connection): void
     );
 
     install_group_schema($connection);
+    install_chapter_schema($connection);
 
     $statement = $connection->prepare(
         "INSERT IGNORE INTO roles (name) VALUES (:admin), (:user)"
@@ -94,6 +95,44 @@ function ensure_group_schema(PDO $connection): void
 {
     if (!group_schema_is_installed($connection)) {
         install_group_schema($connection);
+    }
+}
+
+function install_chapter_schema(PDO $connection): void
+{
+    $connection->exec(
+        "CREATE TABLE IF NOT EXISTS chapters (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            chapter_number TINYINT UNSIGNED NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            description TEXT NOT NULL,
+            start_sentence TEXT NOT NULL,
+            end_sentence TEXT NOT NULL,
+            created_by BIGINT UNSIGNED NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY uq_chapters_number (chapter_number),
+            CONSTRAINT fk_chapters_created_by FOREIGN KEY (created_by)
+                REFERENCES accounts (id) ON UPDATE CASCADE ON DELETE RESTRICT
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
+    );
+}
+
+function chapter_schema_is_installed(PDO $connection): bool
+{
+    $statement = $connection->query(
+        "SELECT COUNT(*) FROM information_schema.tables
+         WHERE table_schema = DATABASE() AND table_name = 'chapters'"
+    );
+
+    return (int) $statement->fetchColumn() === 1;
+}
+
+function ensure_chapter_schema(PDO $connection): void
+{
+    if (!chapter_schema_is_installed($connection)) {
+        install_chapter_schema($connection);
     }
 }
 

@@ -420,6 +420,113 @@ h1 {
     background: #fffefa;
 }
 
+.admin-link-wrap {
+    margin: 1.25rem 0 0;
+}
+
+.admin-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid #cbd4ca;
+    border-radius: 0.6rem;
+    color: #315c4b;
+    font-weight: 650;
+    text-decoration: none;
+}
+
+.admin-link:hover {
+    border-color: #315c4b;
+    background: #edf2ed;
+}
+
+.chapter-admin .page-header {
+    margin-top: 0.5rem;
+}
+
+.chapter-form-section,
+.chapter-list-section {
+    margin-top: 2.5rem;
+}
+
+.chapter-form-section h2,
+.chapter-list-section h2 {
+    margin: 0;
+    color: #315c4b;
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+}
+
+.chapter-form {
+    margin-top: 1rem;
+}
+
+.chapter-form textarea {
+    width: 100%;
+    min-height: 6rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #cbd4ca;
+    border-radius: 0.55rem;
+    background: #fff;
+    color: #20352c;
+    font: inherit;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.chapter-form textarea:focus-visible {
+    outline: 3px solid rgb(49 92 75 / 25%);
+    border-color: #315c4b;
+}
+
+.chapter-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cancel-link,
+.chapter-edit-link {
+    color: #315c4b;
+    font-weight: 650;
+}
+
+.chapter-list {
+    display: grid;
+    gap: 0.65rem;
+    margin: 1rem 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.chapter-list li {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    padding: 0.85rem 1rem;
+    border: 1px solid #e5e2d8;
+    border-radius: 0.6rem;
+    background: #fffefa;
+}
+
+.chapter-number {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: #edf2ed;
+    color: #315c4b;
+    font-weight: 700;
+}
+
+.chapter-title {
+    flex: 1;
+    overflow-wrap: anywhere;
+}
+
 @media (max-width: 540px) {
     .home-page {
         padding: 1.25rem;
@@ -428,5 +535,10 @@ h1 {
     .page-header {
         align-items: flex-start;
         flex-direction: column;
+    }
+
+    .chapter-list li {
+        gap: 0.65rem;
+        padding: 0.75rem;
     }
 }

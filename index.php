@@ -75,6 +75,10 @@ try {
             </form>
         </header>
 
+        <?php if ($account['role'] === 'Admin'): ?>
+            <p class="admin-link-wrap"><a class="admin-link" href="admin/chapters.php">Manage book chapters <span aria-hidden="true">&rarr;</span></a></p>
+        <?php endif; ?>
+
         <?php if (!empty($groupsUnavailable)): ?>
             <p class="message message-error" role="alert">Groups are temporarily unavailable. Check that the database user can create tables and try again.</p>
         <?php endif; ?>
