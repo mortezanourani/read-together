@@ -14,12 +14,12 @@ try {
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
     http_response_code(503);
-    $error = 'Groups are unavailable. Check the database configuration and permissions.';
+    $error = 'گروه‌ها در دسترس نیستند. تنظیمات و مجوزهای پایگاه داده را بررسی کنید.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
     if (!is_valid_csrf_token($_POST['csrf_token'] ?? null)) {
-        $error = 'Your session expired. Refresh the page and try again.';
+        $error = 'نشست شما منقضی شده است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.';
     } else {
         $submittedName = $_POST['name'] ?? '';
         $groupName = is_string($submittedName) ? trim($submittedName) : '';
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
         $nameLength = preg_match_all('/./us', $groupName);
 
         if ($nameLength === false || $groupName === '' || $nameLength > 100) {
-            $error = 'Enter a group name of up to 100 characters.';
+            $error = 'نام گروه را حداکثر با ۱۰۰ نویسه وارد کنید.';
         } else {
             try {
                 $connection = database();
@@ -73,26 +73,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                 }
 
                 if (!$created) {
-                    throw new RuntimeException('Could not generate a unique invitation code.');
+                    throw new RuntimeException('ساخت کد دعوت یکتا ممکن نشد.');
                 }
 
                 header('Location: group.php?id=' . $groupId . '&created=1');
                 exit;
             } catch (Throwable $exception) {
                 error_log($exception->getMessage());
-                $error = 'Could not create the group. Please try again.';
+                $error = 'ساخت گروه ممکن نشد. لطفاً دوباره تلاش کنید.';
             }
         }
     }
 }
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#315c4b">
-    <title>Create a group | Read Together</title>
+    <title>ساخت گروه | باهم بخوانیم</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/css/app.css">
@@ -100,10 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 </head>
 <body>
     <main class="welcome auth-card">
-        <a class="back-link" href="index.php">&larr; Back to your groups</a>
-        <p class="eyebrow">A new reading circle</p>
-        <h1>Create a group</h1>
-        <p class="intro">Choose a name. You'll get a unique invitation code to share.</p>
+        <a class="back-link" href="index.php">&rarr; بازگشت به گروه‌ها</a>
+        <p class="eyebrow">یک جمع کتاب‌خوانی تازه</p>
+        <h1>ساخت گروه</h1>
+        <p class="intro">نامی برای گروه انتخاب کنید. یک کد دعوت یکتا برای اشتراک‌گذاری دریافت می‌کنید.</p>
 
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
@@ -111,7 +111,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 
         <form class="auth-form" method="post" action="create_group.php">
             <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
-            <label for="name">Group name</label>
+            <label for="name">نام گروه</label>
             <input
                 id="name"
                 name="name"
@@ -119,10 +119,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                 maxlength="100"
                 autocomplete="off"
                 value="<?= escape_html($groupName) ?>"
-                placeholder="e.g. Sunday Reading Club"
+                placeholder="مثلاً باشگاه کتاب‌خوانی یکشنبه"
                 required
             >
-            <button class="button" type="submit">Create group</button>
+            <button class="button" type="submit">ساخت گروه</button>
         </form>
     </main>
 </body>

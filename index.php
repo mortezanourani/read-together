@@ -51,13 +51,13 @@ try {
 }
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#315c4b">
-    <meta name="description" content="Read and share stories together.">
-    <title>Read Together</title>
+    <meta name="description" content="باهم بخوانیم و داستان‌ها را به اشتراک بگذاریم.">
+    <title>باهم بخوانیم</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/css/app.css">
@@ -67,38 +67,38 @@ try {
     <main class="home-page">
         <header class="page-header">
             <div>
-                <p class="eyebrow">A little space for stories</p>
-                <h1>Read Together</h1>
-                <p class="intro">Signed in as <?= escape_html($hasDisplayName ? $account['display_name'] : 'Reader') ?></p>
+                <p class="eyebrow">جایی برای داستان‌ها</p>
+                <h1>باهم بخوانیم</h1>
+                <p class="intro">واردشده با نام <?= escape_html($hasDisplayName ? $account['display_name'] : 'خواننده') ?></p>
                 <a class="profile-link" href="profile.php">
-                    <?= $hasDisplayName ? 'Edit display name' : 'Set your display name' ?>
+                    <?= $hasDisplayName ? 'ویرایش نام نمایشی' : 'انتخاب نام نمایشی' ?>
                 </a>
             </div>
             <form action="logout.php" method="post">
                 <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
-                <button class="button button-secondary" type="submit">Log out</button>
+                <button class="button button-secondary" type="submit">خروج</button>
             </form>
         </header>
 
         <?php if ($account['role'] === 'Admin'): ?>
-            <p class="admin-link-wrap"><a class="admin-link" href="admin/chapters.php">Manage book chapters <span aria-hidden="true">&rarr;</span></a></p>
+            <p class="admin-link-wrap"><a class="admin-link" href="admin/chapters.php">مدیریت فصل‌های کتاب <span aria-hidden="true">&larr;</span></a></p>
         <?php endif; ?>
 
         <?php if (!empty($groupsUnavailable)): ?>
-            <p class="message message-error" role="alert">Groups are temporarily unavailable. Check that the database user can create tables and try again.</p>
+            <p class="message message-error" role="alert">گروه‌ها موقتاً در دسترس نیستند. دسترسی پایگاه داده برای ایجاد جدول‌ها را بررسی و دوباره تلاش کنید.</p>
         <?php endif; ?>
 
         <section class="home-section" aria-labelledby="groups-heading">
             <div class="section-heading">
                 <div>
-                    <p class="eyebrow">Your reading circles</p>
-                    <h2 id="groups-heading">Your groups</h2>
+                    <p class="eyebrow">جمع‌های کتاب‌خوانی شما</p>
+                    <h2 id="groups-heading">گروه‌های شما</h2>
                 </div>
                 <span class="group-total"><?= count($groups) ?></span>
             </div>
 
             <?php if ($groups === []): ?>
-                <p class="empty-state">You haven't joined a group yet. Create one or join with an invitation code.</p>
+                <p class="empty-state">هنوز عضو گروهی نشده‌اید. یک گروه بسازید یا با کد دعوت به گروهی بپیوندید.</p>
             <?php else: ?>
                 <div class="group-grid">
                     <?php foreach ($groups as $group): ?>
@@ -106,35 +106,35 @@ try {
                             <span class="group-card-mark" aria-hidden="true">R</span>
                             <span class="group-card-content">
                                 <strong><?= escape_html($group['name']) ?></strong>
-                                <span><?= (int) $group['member_count'] ?> <?= (int) $group['member_count'] === 1 ? 'member' : 'members' ?></span>
+                                <span><?= (int) $group['member_count'] ?> <?= (int) $group['member_count'] === 1 ? 'عضو' : 'عضو' ?></span>
                             </span>
-                            <span class="group-card-arrow" aria-hidden="true">&rarr;</span>
+                            <span class="group-card-arrow" aria-hidden="true">&larr;</span>
                         </a>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </section>
 
-        <section class="action-grid" aria-label="Group actions">
+        <section class="action-grid" aria-label="اقدام‌های گروه">
             <a class="action-card action-card-create" href="create_group.php">
                 <span class="action-icon" aria-hidden="true">+</span>
                 <span class="action-copy">
-                    <strong>Create a group</strong>
-                    <span>Start a new group and invite others.</span>
+                    <strong>ساخت گروه</strong>
+                    <span>گروه تازه‌ای بسازید و دیگران را دعوت کنید.</span>
                 </span>
-                <span class="group-card-arrow" aria-hidden="true">&rarr;</span>
+                <span class="group-card-arrow" aria-hidden="true">&larr;</span>
             </a>
 
             <div class="action-card action-card-join">
                 <span class="action-icon" aria-hidden="true">&#8599;</span>
                 <span class="action-copy">
-                    <strong>Join a group</strong>
-                    <span>Use a group invitation code or link.</span>
+                    <strong>پیوستن به گروه</strong>
+                    <span>با کد دعوت یا پیوند به گروه بپیوندید.</span>
                 </span>
                 <form class="join-inline-form" action="join.php" method="get">
-                    <label class="visually-hidden" for="home-invite-code">Invitation code</label>
-                    <input id="home-invite-code" name="code" type="text" pattern="[A-Fa-f0-9]{12}" maxlength="12" placeholder="12-character code" required>
-                    <button class="button" type="submit">Join</button>
+                    <label class="visually-hidden" for="home-invite-code">کد دعوت</label>
+                    <input id="home-invite-code" name="code" type="text" pattern="[A-Fa-f0-9]{12}" maxlength="12" placeholder="کد ۱۲ کاراکتری" required>
+                    <button class="button" type="submit">پیوستن</button>
                 </form>
             </div>
         </section>

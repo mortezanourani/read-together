@@ -5,7 +5,7 @@ $submittedCode = $_GET['code'] ?? $_POST['code'] ?? '';
 $code = is_string($submittedCode) ? normalize_invite_code($submittedCode) : null;
 if ($code === null) {
     http_response_code(400);
-    $codeError = 'This invitation code is not valid. Check it and try again.';
+    $codeError = 'کد دعوت معتبر نیست. آن را بررسی و دوباره تلاش کنید.';
 } else {
     $codeError = '';
 }
@@ -13,7 +13,7 @@ if ($code === null) {
 if (empty($_SESSION['account_id'])) {
     if ($code === null) {
         http_response_code(400);
-        $error = 'This invitation code is not valid. Check it and try again.';
+        $error = 'کد دعوت معتبر نیست. آن را بررسی و دوباره تلاش کنید.';
     } else {
         $_SESSION['pending_invite_code'] = $code;
         header('Location: login.php');
@@ -35,21 +35,21 @@ if ($error === '') {
 
         if (!$group) {
             http_response_code(404);
-            $error = 'This invitation code does not match a group.';
+            $error = 'گروهی با این کد دعوت پیدا نشد.';
         } elseif ($group['status'] !== 'setup') {
-            $error = 'This group is not accepting members during its current reading cycle.';
+            $error = 'این گروه در دوره کتاب‌خوانی فعلی عضو جدید نمی‌پذیرد.';
             $group = false;
         }
     } catch (PDOException $exception) {
         error_log($exception->getMessage());
         http_response_code(503);
-        $error = 'Groups are unavailable. Check the database configuration and permissions.';
+        $error = 'گروه‌ها در دسترس نیستند. تنظیمات و مجوزهای پایگاه داده را بررسی کنید.';
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '' && $group) {
     if (!is_valid_csrf_token($_POST['csrf_token'] ?? null)) {
-        $error = 'Your session expired. Refresh the page and try again.';
+        $error = 'نشست شما منقضی شده است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.';
     } else {
         try {
             $connection = database();
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '' && $group) {
             $lockGroup->execute(['id' => $group['id']]);
             if ($lockGroup->fetchColumn() !== 'setup') {
                 $connection->rollBack();
-                $error = 'This group is no longer accepting members.';
+                $error = 'این گروه دیگر عضو جدید نمی‌پذیرد.';
             } else {
                 $membership = $connection->prepare(
                     'INSERT IGNORE INTO group_members (group_id, account_id)
@@ -85,18 +85,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '' && $group) {
                 $connection->rollBack();
             }
             error_log($exception->getMessage());
-            $error = 'Could not join this group. Please try again.';
+            $error = 'پیوستن به این گروه ممکن نشد. لطفاً دوباره تلاش کنید.';
         }
     }
 }
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#315c4b">
-    <title>Join a group | Read Together</title>
+    <title>پیوستن به گروه | باهم بخوانیم</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/css/app.css">
@@ -104,18 +104,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '' && $group) {
 </head>
 <body>
     <main class="welcome auth-card">
-        <a class="back-link" href="index.php">&larr; Back to your groups</a>
-        <p class="eyebrow">An invitation</p>
-        <h1>Join a group</h1>
+        <a class="back-link" href="index.php">&rarr; بازگشت به گروه‌ها</a>
+        <p class="eyebrow">دعوت‌نامه</p>
+        <h1>پیوستن به گروه</h1>
 
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
         <?php elseif ($group): ?>
-            <p class="intro">You've been invited to join <strong><?= escape_html($group['name']) ?></strong>.</p>
+            <p class="intro">از شما دعوت شده است به گروه <strong><?= escape_html($group['name']) ?></strong> بپیوندید.</p>
             <form class="auth-form" method="post" action="join.php">
                 <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                 <input type="hidden" name="code" value="<?= escape_html($code) ?>">
-                <button class="button" type="submit">Join this group</button>
+                <button class="button" type="submit">پیوستن به این گروه</button>
             </form>
         <?php endif; ?>
     </main>

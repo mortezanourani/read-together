@@ -82,6 +82,14 @@ h1 {
     font: inherit;
 }
 
+.auth-form input[type="tel"],
+.auth-form input[name="code"],
+.auth-form input[name="installation_key"],
+.join-inline-form input {
+    direction: ltr;
+    text-align: left;
+}
+
 .auth-form input:focus-visible {
     outline: 3px solid rgb(49 92 75 / 25%);
     border-color: #315c4b;
@@ -394,6 +402,7 @@ h1 {
     letter-spacing: 0.12em;
     text-align: center;
     font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    direction: ltr;
 }
 
 .copy-invite-button {
@@ -412,6 +421,8 @@ h1 {
     margin-top: 0.85rem;
     color: #315c4b;
     overflow-wrap: anywhere;
+    direction: ltr;
+    text-align: left;
 }
 
 .member-list {
@@ -582,7 +593,7 @@ h1 {
     width: 100%;
     border-collapse: collapse;
     background: #fffefa;
-    text-align: left;
+    text-align: start;
 }
 
 .report-table th,

@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Read Together",
-  "short_name": "Read Together",
-  "description": "Read and share stories together.",
+  "name": "باهم بخوانیم",
+  "short_name": "باهم بخوانیم",
+  "description": "باهم بخوانید و داستان‌ها را به اشتراک بگذارید.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -190,7 +190,7 @@ function assignments_for_group_date(
 
     $membersQuery = $connection->prepare(
         "SELECT accounts.id AS account_id,
-                COALESCE(NULLIF(accounts.display_name, ''), 'Unnamed reader') AS display_name,
+                COALESCE(NULLIF(accounts.display_name, ''), 'خواننده') AS display_name,
                 group_cycle_members.daily_chapter_count
          FROM group_cycle_members
          INNER JOIN accounts ON accounts.id = group_cycle_members.account_id
@@ -281,7 +281,7 @@ function update_group_daily_count(
         $group = $groupQuery->fetch();
         if (!$group || !in_array($group['status'], ['setup'], true)) {
             $connection->rollBack();
-            return ['error' => 'Daily chapter counts are locked while this cycle is active or completed.'];
+            return ['error' => 'در دوره فعال یا تکمیل‌شده، تعداد روزانه فصل‌ها قابل تغییر نیست.'];
         }
 
         $membershipQuery = $connection->prepare(
@@ -294,7 +294,7 @@ function update_group_daily_count(
         ]);
         if (!$membershipQuery->fetch()) {
             $connection->rollBack();
-            return ['error' => 'You are not a member of this group.'];
+            return ['error' => 'شما عضو این گروه نیستید.'];
         }
 
         $otherCounts = $connection->prepare(
@@ -308,7 +308,7 @@ function update_group_daily_count(
         ]);
         if ((int) $otherCounts->fetchColumn() + $dailyCount > 120) {
             $connection->rollBack();
-            return ['error' => 'That count would make the group total exceed 120 chapters per day.'];
+            return ['error' => 'با این تعداد، مجموع فصل‌های روزانه گروه از ۱۲۰ بیشتر می‌شود.'];
         }
 
         $update = $connection->prepare(
@@ -351,7 +351,7 @@ function restart_group_cycle(PDO $connection, int $groupId, int $creatorId): voi
         $group = $groupQuery->fetch();
 
         if (!$group || (int) $group['created_by'] !== $creatorId || $group['status'] !== 'completed') {
-            throw new RuntimeException('Only the group creator can restart a completed group.');
+            throw new RuntimeException('فقط سازنده گروه می‌تواند دوره تکمیل‌شده را دوباره آغاز کند.');
         }
 
         $clearCounts = $connection->prepare(
@@ -386,6 +386,6 @@ function deactivate_group(PDO $connection, int $groupId, int $creatorId): void
     ]);
 
     if ($statement->rowCount() !== 1) {
-        throw new RuntimeException('Only the creator can deactivate a completed group.');
+        throw new RuntimeException('فقط سازنده گروه می‌تواند گروه تکمیل‌شده را غیرفعال کند.');
     }
 }

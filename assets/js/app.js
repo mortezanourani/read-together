@@ -25,7 +25,7 @@ document.querySelectorAll("[data-copy-text]").forEach((button) => {
         }
 
         if (copied) {
-            status.textContent = "Invitation link copied.";
+            status.textContent = "پیوند دعوت کپی شد.";
             return;
         }
 
@@ -35,15 +35,15 @@ document.querySelectorAll("[data-copy-text]").forEach((button) => {
 
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(() => {
-                status.textContent = "Invitation link copied.";
+                status.textContent = "پیوند دعوت کپی شد.";
             }).catch((error) => {
                 console.error("Could not copy invitation link:", error);
-                status.textContent = "Could not copy the link. Please copy it from the invitation link below.";
+                status.textContent = "کپی پیوند ممکن نشد. لطفاً آن را از پیوند دعوت زیر کپی کنید.";
             });
             return;
         }
 
-        status.textContent = "Could not copy the link. Please copy it from the invitation link below.";
+        status.textContent = "کپی پیوند ممکن نشد. لطفاً آن را از پیوند دعوت زیر کپی کنید.";
     });
 });
 

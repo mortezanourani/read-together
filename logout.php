@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/bootstrap.php';
 if ($_SERVER['REQUEST_METHOD'] !== 'POST'
     || !is_valid_csrf_token($_POST['csrf_token'] ?? null)) {
     http_response_code(400);
-    exit('Invalid request.');
+    exit('درخواست نامعتبر است.');
 }
 
 $_SESSION = [];

@@ -22,7 +22,7 @@ try {
 
     if (!$profile) {
         http_response_code(404);
-        $error = 'Your account could not be found. Please sign in again.';
+        $error = 'حساب کاربری شما پیدا نشد. دوباره وارد شوید.';
     } else {
         $profileAvailable = true;
         $displayName = (string) ($profile['display_name'] ?? '');
@@ -30,19 +30,19 @@ try {
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
     http_response_code(503);
-    $error = 'Your profile is unavailable. Check the database configuration and try again.';
+    $error = 'نمایه شما در دسترس نیست. تنظیمات پایگاه داده را بررسی و دوباره تلاش کنید.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
     if (!is_valid_csrf_token($_POST['csrf_token'] ?? null)) {
-        $error = 'Your session expired. Refresh the page and try again.';
+        $error = 'نشست شما منقضی شده است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.';
     } else {
         $submittedName = $_POST['display_name'] ?? '';
         $submittedName = is_string($submittedName) ? $submittedName : '';
         $normalizedName = normalize_display_name($submittedName);
 
         if ($normalizedName === null) {
-            $error = 'Enter a display name between 1 and 80 characters.';
+            $error = 'نام نمایشی باید بین ۱ تا ۸۰ نویسه باشد.';
             $displayName = trim($submittedName);
         } else {
             try {
@@ -64,10 +64,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                     exit;
                 }
 
-                $notice = 'Your display name has been saved.';
+                $notice = 'نام نمایشی شما ذخیره شد.';
             } catch (PDOException $exception) {
                 error_log($exception->getMessage());
-                $error = 'Could not save your display name. Please try again.';
+                $error = 'ذخیره نام نمایشی ممکن نشد. لطفاً دوباره تلاش کنید.';
             }
         }
     }
@@ -76,12 +76,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 $returnToInvite = isset($_GET['next']) && $_GET['next'] === 'invite';
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#315c4b">
-    <title>Display name | Read Together</title>
+    <title>نام نمایشی | باهم بخوانیم</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/css/app.css">
@@ -90,11 +90,11 @@ $returnToInvite = isset($_GET['next']) && $_GET['next'] === 'invite';
 <body>
     <main class="welcome auth-card">
         <?php if (!$returnToInvite): ?>
-            <a class="back-link" href="index.php">&larr; Back to your groups</a>
+            <a class="back-link" href="index.php">&rarr; بازگشت به گروه‌ها</a>
         <?php endif; ?>
-        <p class="eyebrow">Your profile</p>
-        <h1>Display name</h1>
-        <p class="intro">Your name is shown to other members in your groups instead of your phone number.</p>
+        <p class="eyebrow">نمایه شما</p>
+        <h1>نام نمایشی</h1>
+        <p class="intro">نام شما به‌جای شماره موبایل، برای دیگر اعضای گروه نمایش داده می‌شود.</p>
 
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
@@ -108,7 +108,7 @@ $returnToInvite = isset($_GET['next']) && $_GET['next'] === 'invite';
                 <?php if ($returnToInvite): ?>
                     <input type="hidden" name="next" value="invite">
                 <?php endif; ?>
-                <label for="display_name">Display name</label>
+                <label for="display_name">نام نمایشی</label>
                 <input
                     id="display_name"
                     name="display_name"
@@ -116,14 +116,14 @@ $returnToInvite = isset($_GET['next']) && $_GET['next'] === 'invite';
                     maxlength="80"
                     autocomplete="nickname"
                     value="<?= escape_html($displayName) ?>"
-                    placeholder="How should we call you?"
+                    placeholder="دوست دارید شما را چه صدا کنیم؟"
                     required
                 >
-                <p class="field-hint">Use 1 to 80 characters. You can change this any time.</p>
-                <button class="button" type="submit">Save display name</button>
+                <p class="field-hint">نامی بین ۱ تا ۸۰ نویسه انتخاب کنید. هر زمان می‌توانید آن را تغییر دهید.</p>
+                <button class="button" type="submit">ذخیره نام نمایشی</button>
             </form>
-        <?php elseif ($error === 'Your account could not be found. Please sign in again.'): ?>
-            <p><a class="admin-link" href="login.php">Sign in again</a></p>
+        <?php elseif ($error === 'حساب کاربری شما پیدا نشد. دوباره وارد شوید.'): ?>
+            <p><a class="admin-link" href="login.php">ورود دوباره</a></p>
         <?php endif; ?>
     </main>
 </body>

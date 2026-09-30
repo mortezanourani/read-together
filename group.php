@@ -22,7 +22,7 @@ $currentMemberCount = null;
 
 if ($groupId === false || $groupId === null) {
     http_response_code(404);
-    $error = 'This group could not be found.';
+    $error = 'این گروه پیدا نشد.';
 } else {
     try {
         $connection = database();
@@ -46,7 +46,7 @@ if ($groupId === false || $groupId === null) {
 
         if (!$group) {
             http_response_code(404);
-            $error = 'This group could not be found.';
+            $error = 'این گروه پیدا نشد.';
         } else {
             if ($group['status'] === 'setup') {
                 begin_group_cycle_if_ready($connection, $groupId);
@@ -93,13 +93,13 @@ if ($groupId === false || $groupId === null) {
     } catch (PDOException $exception) {
         error_log($exception->getMessage());
         http_response_code(503);
-        $error = 'Groups or reading assignments are unavailable. Check the database configuration and permissions.';
+        $error = 'گروه‌ها یا برنامه خواندن در دسترس نیستند. تنظیمات و مجوزهای پایگاه داده را بررسی کنید.';
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $group && $error === '') {
     if (!is_valid_csrf_token($_POST['csrf_token'] ?? null)) {
-        $error = 'Your session expired. Refresh the page and try again.';
+        $error = 'نشست شما منقضی شده است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.';
     } else {
         $action = $_POST['action'] ?? '';
 
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $group && $error === '') {
                     ? filter_var($submittedCount, FILTER_VALIDATE_INT)
                     : false;
                 if ($dailyCount === false || $dailyCount < 1 || $dailyCount > 120) {
-                    $error = 'Choose a daily chapter count from 1 to 120.';
+                    $error = 'تعداد فصل‌های روزانه را بین ۱ تا ۱۲۰ انتخاب کنید.';
                 } else {
                     $result = update_group_daily_count(
                         $connection,
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $group && $error === '') {
                 }
             } elseif ($action === 'submit_read') {
                 if ($group['status'] !== 'active') {
-                    $error = 'Reading reports can only be submitted during an active cycle.';
+                    $error = 'ثبت گزارش خواندن فقط در دوره فعال امکان‌پذیر است.';
                 } else {
                     $submittedChapterId = $_POST['chapter_id'] ?? null;
                     $chapterId = is_string($submittedChapterId)
@@ -149,11 +149,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $group && $error === '') {
                     }
 
                     if (!$assignment) {
-                        $error = 'That chapter is not assigned to you today.';
+                        $error = 'این فصل برای امروز به شما اختصاص داده نشده است.';
                     } elseif ($assignment['status'] === 'read') {
-                        $error = 'You already submitted this chapter.';
+                        $error = 'گزارش خواندن این فصل را قبلاً ثبت کرده‌اید.';
                     } elseif ($assignment['assignment_date'] !== gmdate('Y-m-d')) {
-                        $error = 'The day changed. Refresh to see your current assignments.';
+                        $error = 'روز تغییر کرده است. برای دیدن فصل‌های امروز صفحه را تازه‌سازی کنید.';
                     } else {
                         $report = $connection->prepare(
                             'INSERT INTO reading_reports
@@ -181,33 +181,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $group && $error === '') {
                 header('Location: ../index.php');
                 exit;
             } else {
-                $error = 'That group action is not available.';
+                $error = 'این عملیات برای گروه در دسترس نیست.';
             }
         } catch (PDOException $exception) {
             error_log($exception->getMessage());
             $error = $exception->getCode() === '23000'
-                ? 'This chapter has already been reported as read.'
-                : 'Could not complete that action. Please try again.';
+                ? 'گزارش خواندن این فصل قبلاً ثبت شده است.'
+                : 'انجام این عملیات ممکن نشد. لطفاً دوباره تلاش کنید.';
         } catch (Throwable $exception) {
             error_log($exception->getMessage());
-            $error = 'Could not complete that action. Please try again.';
+            $error = 'انجام این عملیات ممکن نشد. لطفاً دوباره تلاش کنید.';
         }
     }
 }
 
 if ($group) {
     if (isset($_GET['started'])) {
-        $notice = 'The 120-day reading cycle has started.';
+        $notice = 'دوره ۱۲۰ روزه کتاب‌خوانی آغاز شد.';
     } elseif (isset($_GET['count_saved'])) {
-        $notice = 'Your daily chapter count was saved.';
+        $notice = 'تعداد روزانه فصل‌های شما ذخیره شد.';
     } elseif (isset($_GET['reported'])) {
-        $notice = 'Your reading report was submitted.';
+        $notice = 'گزارش خواندن شما ثبت شد.';
     } elseif (isset($_GET['restarted'])) {
-        $notice = 'The group is ready to configure its next reading cycle.';
+        $notice = 'گروه آماده تنظیم دوره کتاب‌خوانی بعدی است.';
     } elseif (isset($_GET['created'])) {
-        $notice = 'Your group is ready. Set daily chapter counts to start reading together.';
+        $notice = 'گروه شما آماده است. برای شروع کتاب‌خوانی، تعداد فصل‌های روزانه را مشخص کنید.';
     } elseif (isset($_GET['joined'])) {
-        $notice = 'You joined the group.';
+        $notice = 'به گروه پیوستید.';
     }
 }
 
@@ -220,12 +220,12 @@ $myTodayAssignments = array_values(array_filter(
 ));
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#315c4b">
-    <title><?= $group ? escape_html($group['name']) . ' | Read Together' : 'Group | Read Together' ?></title>
+    <title><?= $group ? escape_html($group['name']) . ' | باهم بخوانیم' : 'گروه | باهم بخوانیم' ?></title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/css/app.css">
@@ -233,7 +233,7 @@ $myTodayAssignments = array_values(array_filter(
 </head>
 <body>
     <main class="welcome auth-card group-page">
-        <a class="back-link" href="index.php">&larr; Back to your groups</a>
+        <a class="back-link" href="index.php">&rarr; بازگشت به گروه‌های شما</a>
 
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
@@ -243,27 +243,27 @@ $myTodayAssignments = array_values(array_filter(
         <?php endif; ?>
 
         <?php if ($group): ?>
-            <p class="eyebrow">Your reading circle</p>
+            <p class="eyebrow">جمع کتاب‌خوانی شما</p>
             <h1><?= escape_html($group['name']) ?></h1>
 
             <?php if ($group['status'] === 'setup'): ?>
                 <section class="group-info-section" aria-labelledby="plan-heading">
-                    <h2 id="plan-heading">Set your daily reading</h2>
+                    <h2 id="plan-heading">برنامه خواندن روزانه‌تان را تنظیم کنید</h2>
                     <p class="section-copy">
-                        Choose how many chapters you can read each day. The group starts when at least two members have joined, all 120 chapters are defined, and member counts add up to exactly 120.
+                        تعداد فصل‌هایی را که می‌توانید هر روز بخوانید انتخاب کنید. گروه زمانی آغاز می‌شود که دست‌کم دو عضو داشته باشد، هر ۱۲۰ فصل تعریف شده باشند و مجموع تعداد فصل‌های اعضا دقیقاً ۱۲۰ باشد.
                     </p>
                     <p class="quota-total">
-                        Group total: <strong><?= $dailyTotal ?> / 120 chapters per day</strong>
-                        <span><?= max(0, 120 - $dailyTotal) ?> remaining</span>
+                        مجموع گروه: <strong><?= $dailyTotal ?> از ۱۲۰ فصل در روز</strong>
+                        <span><?= max(0, 120 - $dailyTotal) ?> فصل باقی‌مانده</span>
                     </p>
                     <?php if ($chaptersAvailable !== 120): ?>
-                        <p class="message">The Admin has defined <?= $chaptersAvailable ?> of 120 chapters. Assignments start once all are ready.</p>
+                        <p class="message">مدیر <?= $chaptersAvailable ?> فصل از ۱۲۰ فصل را تعریف کرده است. پس از آماده‌شدن همه فصل‌ها، برنامه آغاز می‌شود.</p>
                     <?php endif; ?>
 
                     <form class="auth-form quota-form" method="post" action="group.php?id=<?= (int) $group['id'] ?>">
                         <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                         <input type="hidden" name="action" value="set_daily_count">
-                        <label for="daily_chapter_count">Chapters you want to read each day</label>
+                        <label for="daily_chapter_count">تعداد فصل‌هایی که می‌خواهید هر روز بخوانید</label>
                         <input
                             id="daily_chapter_count"
                             name="daily_chapter_count"
@@ -273,13 +273,13 @@ $myTodayAssignments = array_values(array_filter(
                             value="<?= $currentMemberCount === null ? '' : $currentMemberCount ?>"
                             required
                         >
-                        <button class="button" type="submit">Save daily count</button>
+                        <button class="button" type="submit">ذخیره تعداد روزانه</button>
                     </form>
                 </section>
 
                 <section class="group-info-section" aria-labelledby="member-counts-heading">
                     <div class="section-heading">
-                        <h2 id="member-counts-heading">Members</h2>
+                        <h2 id="member-counts-heading">اعضا</h2>
                         <span class="group-total"><?= count($members) ?></span>
                     </div>
                     <ul class="member-list">
@@ -288,8 +288,8 @@ $myTodayAssignments = array_values(array_filter(
                                 <span><?= escape_html($member['display_name']) ?></span>
                                 <span class="member-quota">
                                     <?= $member['daily_chapter_count'] === null
-                                        ? 'Not set'
-                                        : (int) $member['daily_chapter_count'] . ' / day' ?>
+                                        ? 'تعیین‌نشده'
+                                        : (int) $member['daily_chapter_count'] . ' فصل در روز' ?>
                                 </span>
                             </li>
                         <?php endforeach; ?>
@@ -298,34 +298,34 @@ $myTodayAssignments = array_values(array_filter(
             <?php elseif ($group['status'] === 'active'): ?>
                 <?php $cycleDay = group_cycle_day($group, gmdate('Y-m-d')); ?>
                 <p class="cycle-summary">
-                    Reading day <?= $cycleDay === null ? '—' : $cycleDay + 1 ?> of 120
-                    <span>Cycle started <?= escape_html($group['assignments_start_date']) ?></span>
+                    روز <?= $cycleDay === null ? '—' : $cycleDay + 1 ?> از ۱۲۰
+                    <span>آغاز دوره: <?= escape_html($group['assignments_start_date']) ?></span>
                 </p>
 
                 <section class="group-info-section" aria-labelledby="today-heading">
                     <div class="section-heading">
-                        <h2 id="today-heading">Your chapters for today</h2>
+                        <h2 id="today-heading">فصل‌های امروز شما</h2>
                         <span class="group-total"><?= count($myTodayAssignments) ?></span>
                     </div>
                     <?php if ($myTodayAssignments === []): ?>
-                        <p class="empty-state">There are no chapters assigned to you today.</p>
+                        <p class="empty-state">امروز فصلی به شما اختصاص داده نشده است.</p>
                     <?php else: ?>
                         <div class="assigned-chapters">
                             <?php foreach ($myTodayAssignments as $assignment): ?>
                                 <article class="assigned-chapter">
-                                    <p class="eyebrow">Chapter <?= (int) $assignment['chapter']['chapter_number'] ?></p>
+                                    <p class="eyebrow">فصل <?= (int) $assignment['chapter']['chapter_number'] ?></p>
                                     <h3><?= escape_html($assignment['chapter']['title']) ?></h3>
                                     <p><?= nl2br(escape_html($assignment['chapter']['description'])) ?></p>
-                                    <p class="chapter-boundary"><strong>Starts:</strong> <?= nl2br(escape_html($assignment['chapter']['start_sentence'])) ?></p>
-                                    <p class="chapter-boundary"><strong>Ends:</strong> <?= nl2br(escape_html($assignment['chapter']['end_sentence'])) ?></p>
+                                    <p class="chapter-boundary"><strong>آغاز:</strong> <?= nl2br(escape_html($assignment['chapter']['start_sentence'])) ?></p>
+                                    <p class="chapter-boundary"><strong>پایان:</strong> <?= nl2br(escape_html($assignment['chapter']['end_sentence'])) ?></p>
                                     <?php if ($assignment['status'] === 'read'): ?>
-                                        <p class="report-complete">Read report submitted</p>
+                                        <p class="report-complete">گزارش خواندن ثبت شده است</p>
                                     <?php else: ?>
                                         <form method="post" action="group.php?id=<?= (int) $group['id'] ?>">
                                             <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                                             <input type="hidden" name="action" value="submit_read">
                                             <input type="hidden" name="chapter_id" value="<?= (int) $assignment['chapter']['id'] ?>">
-                                            <button class="button" type="submit">I read this chapter</button>
+                                            <button class="button" type="submit">این فصل را خواندم</button>
                                         </form>
                                     <?php endif; ?>
                                 </article>
@@ -335,42 +335,42 @@ $myTodayAssignments = array_values(array_filter(
                 </section>
 
             <?php elseif ($group['status'] === 'completed'): ?>
-                <p class="message">This group has completed its 120-day reading cycle. The creator can start another cycle or deactivate the group.</p>
+                <p class="message">دوره ۱۲۰ روزه کتاب‌خوانی این گروه به پایان رسیده است. سازنده می‌تواند دوره دیگری آغاز کند یا گروه را غیرفعال کند.</p>
                 <?php if ($creator): ?>
                     <form class="auth-form lifecycle-form" method="post" action="group.php?id=<?= (int) $group['id'] ?>">
                         <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                         <input type="hidden" name="action" value="restart_cycle">
-                        <button class="button" type="submit">Start another cycle</button>
+                        <button class="button" type="submit">آغاز دوره جدید</button>
                     </form>
                     <form class="lifecycle-form" method="post" action="group.php?id=<?= (int) $group['id'] ?>">
                         <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                         <input type="hidden" name="action" value="deactivate_group">
-                        <button class="button button-danger" type="submit">Deactivate group</button>
+                        <button class="button button-danger" type="submit">غیرفعال‌کردن گروه</button>
                     </form>
                 <?php endif; ?>
             <?php else: ?>
-                <p class="message">This group has been deactivated and is no longer accepting reading activity.</p>
+                <p class="message">این گروه غیرفعال شده است و فعالیت کتاب‌خوانی در آن امکان‌پذیر نیست.</p>
             <?php endif; ?>
 
             <?php if ($creator && (int) $group['cycle_number'] > 0): ?>
-                <p class="admin-link-wrap"><a class="admin-link" href="group_reports.php?id=<?= (int) $group['id'] ?>">View member reading reports <span aria-hidden="true">&rarr;</span></a></p>
+                <p class="admin-link-wrap"><a class="admin-link" href="group_reports.php?id=<?= (int) $group['id'] ?>">مشاهده گزارش خواندن اعضا <span aria-hidden="true">&larr;</span></a></p>
             <?php endif; ?>
 
             <?php if ($group['status'] !== 'deactivated'): ?>
                 <section class="group-info-section" aria-labelledby="invitation-heading">
-                    <h2 id="invitation-heading">Invitation</h2>
+                    <h2 id="invitation-heading">دعوت‌نامه</h2>
                     <?php if ($group['status'] === 'setup'): ?>
-                        <p class="section-copy">Share the invitation code or link before the reading cycle starts.</p>
+                        <p class="section-copy">پیش از آغاز دوره کتاب‌خوانی، کد یا پیوند دعوت را به اشتراک بگذارید.</p>
                         <div class="invite-code"><?= escape_html($group['invite_code']) ?></div>
                         <button
                             class="button copy-invite-button"
                             type="button"
                             data-copy-text="<?= escape_html($invitationUrl) ?>"
-                        >Copy invitation link</button>
+                        >کپی پیوند دعوت</button>
                         <p class="copy-status" role="status" aria-live="polite"></p>
                         <a class="invite-link" href="<?= escape_html($invitationUrl) ?>"><?= escape_html($invitationUrl) ?></a>
                     <?php else: ?>
-                        <p class="section-copy">Membership and daily counts are locked for this cycle.</p>
+                        <p class="section-copy">عضویت و تعداد فصل‌های روزانه در این دوره قفل شده‌اند.</p>
                     <?php endif; ?>
                 </section>
             <?php endif; ?>

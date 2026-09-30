@@ -20,14 +20,14 @@ try {
     $schemaReady = schema_is_installed($connection);
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
-    $error = 'The database is unavailable. Check the settings in config.php.';
+    $error = 'پایگاه داده در دسترس نیست. تنظیمات فایل config.php را بررسی کنید.';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
     if (!is_valid_csrf_token($_POST['csrf_token'] ?? null)) {
-        $error = 'Your session expired. Refresh the page and try again.';
+        $error = 'نشست شما منقضی شده است. صفحه را تازه‌سازی کنید و دوباره تلاش کنید.';
     } elseif (!$schemaReady) {
-        $error = 'The database is not installed yet. Configure config.php and run install.php.';
+        $error = 'پایگاه داده هنوز راه‌اندازی نشده است. فایل config.php را تنظیم و install.php را اجرا کنید.';
     } else {
         $action = $_POST['action'] ?? '';
 
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                     : null;
 
                 if ($phone === null) {
-                    $error = 'Enter a valid 11-digit mobile number starting with 09.';
+                    $error = 'شماره موبایل ۱۱ رقمی معتبر که با ۰۹ شروع می‌شود وارد کنید.';
                 } else {
                     $rateLimit = $connection->prepare(
                         'SELECT created_at FROM login_otps
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                     $rateLimit->execute(['phone' => $phone]);
 
                     if ($rateLimit->fetch()) {
-                        $error = 'Please wait a minute before requesting another code.';
+                        $error = 'برای درخواست کد جدید، یک دقیقه صبر کنید.';
                     } else {
                         $code = (string) random_int(100000, 999999);
                         $codeHash = password_hash($code, PASSWORD_DEFAULT);
@@ -74,12 +74,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                             send_login_otp($phone, $code);
                             $_SESSION['otp_phone'] = $phone;
                             $otpPhone = $phone;
-                            $notice = 'A sign-in code was sent to your phone.';
+                            $notice = 'کد ورود به شماره موبایل شما ارسال شد.';
                         } catch (LogicException $exception) {
-                            $error = 'OTP delivery is not configured yet. Contact the administrator.';
+                            $error = 'ارسال کد یک‌بارمصرف هنوز تنظیم نشده است. با مدیر سامانه تماس بگیرید.';
                         } catch (Throwable $exception) {
                             error_log($exception->getMessage());
-                            $error = 'Could not send a sign-in code. Please try again later.';
+                            $error = 'ارسال کد ورود ممکن نشد. لطفاً بعداً دوباره تلاش کنید.';
                         }
                     }
                 }
@@ -87,7 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                 $code = (string) ($_POST['code'] ?? '');
 
                 if ($otpPhone === '' || !preg_match('/^\d{6}$/D', $code)) {
-                    $error = 'Enter the six-digit code sent to your phone.';
+                    $error = 'کد شش‌رقمی ارسال‌شده به شماره موبایل خود را وارد کنید.';
                 } else {
                     $connection->beginTransaction();
                     $findOtp = $connection->prepare(
@@ -107,14 +107,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                             $removeOtp->execute(['phone' => $otpPhone]);
                         }
                         $connection->commit();
-                        $error = 'That code is invalid or expired. Request a new code.';
+                        $error = 'کد نامعتبر است یا مهلتش تمام شده است. کد جدیدی درخواست کنید.';
                     } elseif (!password_verify($code, $otp['code_hash'])) {
                         $incrementAttempts = $connection->prepare(
                             'UPDATE login_otps SET attempts = attempts + 1 WHERE phone = :phone'
                         );
                         $incrementAttempts->execute(['phone' => $otpPhone]);
                         $connection->commit();
-                        $error = 'That code is invalid or expired. Request a new code.';
+                        $error = 'کد نامعتبر است یا مهلتش تمام شده است. کد جدیدی درخواست کنید.';
                     } else {
                         $roleQuery = $connection->prepare(
                             'SELECT accounts.id, roles.name AS role
@@ -133,7 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                             $roleId = $userRole->fetchColumn();
 
                             if (!$roleId) {
-                                throw new RuntimeException('The User role is missing from the database.');
+                                throw new RuntimeException('نقش کاربر در پایگاه داده وجود ندارد.');
                             }
 
                             $createAccount = $connection->prepare(
@@ -182,33 +182,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                     }
                 }
             } else {
-                $error = 'Choose whether to request or verify a code.';
+                $error = 'درخواست یا تأیید کد را انتخاب کنید.';
             }
         } catch (PDOException $exception) {
             if ($connection->inTransaction()) {
                 $connection->rollBack();
             }
             error_log($exception->getMessage());
-            $error = 'Could not process your sign-in request. Please try again later.';
+            $error = 'پردازش درخواست ورود ممکن نشد. لطفاً بعداً دوباره تلاش کنید.';
         } catch (Throwable $exception) {
             if ($connection->inTransaction()) {
                 $connection->rollBack();
             }
             error_log($exception->getMessage());
-            $error = 'Could not process your sign-in request. Please try again later.';
+            $error = 'پردازش درخواست ورود ممکن نشد. لطفاً بعداً دوباره تلاش کنید.';
         }
     }
 }
 
-$pageTitle = 'Sign in | Read Together';
+$pageTitle = 'ورود | باهم بخوانیم';
 ?>
 <!doctype html>
-<html lang="en">
+<html lang="fa" dir="rtl">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#315c4b">
-    <meta name="description" content="Sign in to Read Together with a one-time phone code.">
+    <meta name="description" content="با کد یک‌بارمصرف موبایل وارد باهم بخوانیم شوید.">
     <title><?= escape_html($pageTitle) ?></title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
@@ -217,9 +217,9 @@ $pageTitle = 'Sign in | Read Together';
 </head>
 <body>
     <main class="welcome auth-card">
-        <p class="eyebrow">Welcome back</p>
-        <h1>Sign in</h1>
-        <p class="intro">Enter your mobile number and we'll send you a one-time code.</p>
+        <p class="eyebrow">خوش برگشتید</p>
+        <h1>ورود</h1>
+        <p class="intro">شماره موبایل خود را وارد کنید تا کد یک‌بارمصرف برایتان ارسال شود.</p>
 
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
@@ -228,13 +228,13 @@ $pageTitle = 'Sign in | Read Together';
         <?php endif; ?>
 
         <?php if (!$schemaReady && $error === ''): ?>
-            <p class="message">Configure the database in config.php, then run install.php to set up the app.</p>
+            <p class="message">برای راه‌اندازی برنامه، پایگاه داده را در config.php تنظیم کنید و سپس install.php را اجرا کنید.</p>
         <?php endif; ?>
 
         <form class="auth-form" method="post" action="login.php">
             <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
             <input type="hidden" name="action" value="request_otp">
-            <label for="phone">Phone number</label>
+            <label for="phone">شماره موبایل</label>
             <input
                 id="phone"
                 name="phone"
@@ -247,15 +247,15 @@ $pageTitle = 'Sign in | Read Together';
                 value="<?= escape_html($otpPhone) ?>"
                 required
             >
-            <p class="field-hint">Enter your 11-digit mobile number starting with 09.</p>
-            <button class="button" type="submit" <?= $schemaReady ? '' : 'disabled' ?>>Send sign-in code</button>
+            <p class="field-hint">شماره موبایل ۱۱ رقمی خود را با ۰۹ وارد کنید.</p>
+            <button class="button" type="submit" <?= $schemaReady ? '' : 'disabled' ?>>ارسال کد ورود</button>
         </form>
 
         <?php if ($otpPhone !== ''): ?>
             <form class="auth-form verification-form" method="post" action="login.php">
                 <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                 <input type="hidden" name="action" value="verify_otp">
-                <label for="code">One-time code</label>
+                <label for="code">کد یک‌بارمصرف</label>
                 <input
                     id="code"
                     name="code"
@@ -267,7 +267,7 @@ $pageTitle = 'Sign in | Read Together';
                     placeholder="123456"
                     required
                 >
-                <button class="button" type="submit">Verify and sign in</button>
+                <button class="button" type="submit">تأیید و ورود</button>
             </form>
         <?php endif; ?>
     </main>
