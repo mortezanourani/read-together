@@ -33,10 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
 
         try {
             if ($action === 'request_otp') {
-                $phone = normalize_phone_number((string) ($_POST['phone'] ?? ''));
+                $submittedPhone = $_POST['phone'] ?? '';
+                $phone = is_string($submittedPhone)
+                    ? normalize_phone_number($submittedPhone)
+                    : null;
 
                 if ($phone === null) {
-                    $error = 'Enter a valid phone number with country code, such as +14155552671.';
+                    $error = 'Enter a valid 11-digit mobile number starting with 09.';
                 } else {
                     $rateLimit = $connection->prepare(
                         'SELECT created_at FROM login_otps
@@ -159,8 +162,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $error === '') {
                             (string) ($_SESSION['pending_invite_code'] ?? '')
                         );
                         if ($pendingInviteCode !== null) {
-                            unset($_SESSION['pending_invite_code']);
-                            header('Location: join.php?code=' . rawurlencode($pendingInviteCode));
+                            $_SESSION['pending_invite_code'] = $pendingInviteCode;
+                            header('Location: profile.php?next=invite');
+                            exit;
+                        }
+
+                        $profileName = $connection->prepare(
+                            'SELECT display_name FROM accounts WHERE id = :id'
+                        );
+                        $profileName->execute(['id' => $account['id']]);
+                        $displayName = $profileName->fetchColumn();
+                        if ($displayName === false || $displayName === null || $displayName === '') {
+                            header('Location: profile.php');
                             exit;
                         }
 
@@ -206,7 +219,7 @@ $pageTitle = 'Sign in | Read Together';
     <main class="welcome auth-card">
         <p class="eyebrow">Welcome back</p>
         <h1>Sign in</h1>
-        <p class="intro">Enter your phone number and we'll send you a one-time code.</p>
+        <p class="intro">Enter your mobile number and we'll send you a one-time code.</p>
 
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
@@ -228,13 +241,13 @@ $pageTitle = 'Sign in | Read Together';
                 type="tel"
                 inputmode="tel"
                 autocomplete="tel"
-                placeholder="+14155552671"
-                pattern="\+[1-9][0-9]{7,14}"
-                maxlength="16"
+                placeholder="09123456789"
+                pattern="09[0-9]{9}"
+                maxlength="11"
                 value="<?= escape_html($otpPhone) ?>"
                 required
             >
-            <p class="field-hint">Include your country code, for example +14155552671.</p>
+            <p class="field-hint">Enter your 11-digit mobile number starting with 09.</p>
             <button class="button" type="submit" <?= $schemaReady ? '' : 'disabled' ?>>Send sign-in code</button>
         </form>
 

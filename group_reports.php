@@ -132,7 +132,7 @@ unset($assignment);
                     <tbody>
                         <?php foreach ($assignments as $assignment): ?>
                             <tr>
-                                <td><?= escape_html($assignment['phone']) ?></td>
+                                <td><?= escape_html($assignment['display_name']) ?></td>
                                 <td><?= (int) $assignment['chapter']['chapter_number'] ?></td>
                                 <td><?= escape_html($assignment['chapter']['title']) ?></td>
                                 <td><span class="report-status report-status-<?= strtolower(str_replace(' ', '-', $assignment['report_status'])) ?>"><?= escape_html($assignment['report_status']) ?></span></td>

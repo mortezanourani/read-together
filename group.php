@@ -63,12 +63,13 @@ if ($groupId === false || $groupId === null) {
                  WHERE chapter_number BETWEEN 1 AND 120'
             )->fetchColumn();
             $memberQuery = $connection->prepare(
-                'SELECT accounts.id AS account_id, accounts.phone,
+                "SELECT accounts.id AS account_id,
+                        COALESCE(NULLIF(accounts.display_name, ''), 'Unnamed reader') AS display_name,
                         group_members.daily_chapter_count, group_members.joined_at
                  FROM group_members
                  INNER JOIN accounts ON accounts.id = group_members.account_id
                  WHERE group_members.group_id = :group_id
-                 ORDER BY group_members.joined_at, accounts.id'
+                 ORDER BY group_members.joined_at, accounts.id"
             );
             $memberQuery->execute(['group_id' => $groupId]);
             $members = $memberQuery->fetchAll();
@@ -284,7 +285,7 @@ $myTodayAssignments = array_values(array_filter(
                     <ul class="member-list">
                         <?php foreach ($members as $member): ?>
                             <li>
-                                <span><?= escape_html($member['phone']) ?></span>
+                                <span><?= escape_html($member['display_name']) ?></span>
                                 <span class="member-quota">
                                     <?= $member['daily_chapter_count'] === null
                                         ? 'Not set'

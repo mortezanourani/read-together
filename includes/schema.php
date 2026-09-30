@@ -15,6 +15,7 @@ function install_schema(PDO $connection): void
         "CREATE TABLE IF NOT EXISTS accounts (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             phone VARCHAR(16) NOT NULL,
+            display_name VARCHAR(80) NULL,
             role_id TINYINT UNSIGNED NOT NULL,
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
@@ -23,7 +24,6 @@ function install_schema(PDO $connection): void
                 REFERENCES roles (id) ON UPDATE CASCADE ON DELETE RESTRICT
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci"
     );
-
     $connection->exec(
         "CREATE TABLE IF NOT EXISTS login_otps (
             phone VARCHAR(16) NOT NULL,
@@ -50,6 +50,7 @@ function install_schema(PDO $connection): void
 function install_group_schema(PDO $connection): void
 {
     install_chapter_schema($connection);
+    ensure_account_schema($connection);
 
     $connection->exec(
         "CREATE TABLE IF NOT EXISTS `groups` (
@@ -137,6 +138,12 @@ function install_group_schema(PDO $connection): void
     );
 }
 
+function ensure_account_schema(PDO $connection): void
+{
+    ensure_column($connection, 'accounts', 'display_name', 'VARCHAR(80) NULL');
+    migrate_iranian_mobile_numbers($connection);
+}
+
 function ensure_column(PDO $connection, string $table, string $column, string $definition): void
 {
     $statement = $connection->prepare(
@@ -164,6 +171,42 @@ function ensure_column(PDO $connection, string $table, string $column, string $d
                 throw $exception;
             }
         }
+    }
+}
+
+function migrate_iranian_mobile_numbers(PDO $connection): void
+{
+    $legacyNumbers = $connection->query(
+        "SELECT id, phone FROM accounts WHERE phone LIKE '+98%'"
+    )->fetchAll();
+    $findLocalNumber = $connection->prepare(
+        'SELECT id FROM accounts WHERE phone = :phone AND id <> :id'
+    );
+    $updateNumber = $connection->prepare(
+        'UPDATE accounts SET phone = :phone WHERE id = :id'
+    );
+
+    foreach ($legacyNumbers as $account) {
+        if (!preg_match('/^\+989[0-9]{9}$/D', $account['phone'])) {
+            continue;
+        }
+
+        $localNumber = '0' . substr($account['phone'], 3);
+        $findLocalNumber->execute([
+            'phone' => $localNumber,
+            'id' => $account['id'],
+        ]);
+
+        if ($findLocalNumber->fetchColumn()) {
+            error_log('Could not migrate account phone because the local number already exists (account ID '
+                . (int) $account['id'] . ').');
+            continue;
+        }
+
+        $updateNumber->execute([
+            'phone' => $localNumber,
+            'id' => $account['id'],
+        ]);
     }
 }
 
@@ -229,5 +272,10 @@ function schema_is_installed(PDO $connection): bool
            AND table_name IN ('roles', 'accounts', 'login_otps')"
     );
 
-    return (int) $statement->fetchColumn() === 3;
+    $installed = (int) $statement->fetchColumn() === 3;
+    if ($installed) {
+        ensure_account_schema($connection);
+    }
+
+    return $installed;
 }

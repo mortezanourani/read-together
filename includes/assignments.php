@@ -189,13 +189,14 @@ function assignments_for_group_date(
     }
 
     $membersQuery = $connection->prepare(
-        'SELECT accounts.id AS account_id, accounts.phone,
+        "SELECT accounts.id AS account_id,
+                COALESCE(NULLIF(accounts.display_name, ''), 'Unnamed reader') AS display_name,
                 group_cycle_members.daily_chapter_count
          FROM group_cycle_members
          INNER JOIN accounts ON accounts.id = group_cycle_members.account_id
          WHERE group_cycle_members.group_id = :group_id
            AND group_cycle_members.cycle_number = :cycle_number
-         ORDER BY group_cycle_members.member_order'
+         ORDER BY group_cycle_members.member_order"
     );
     $membersQuery->execute([
         'group_id' => $groupId,
@@ -251,7 +252,7 @@ function assignments_for_group_date(
             $chapterId = (int) $chapter['id'];
             $assignments[] = [
                 'account_id' => $accountId,
-                'phone' => $member['phone'],
+                'display_name' => $member['display_name'],
                 'cycle_number' => (int) $cycle['cycle_number'],
                 'assignment_date' => $assignmentDate,
                 'chapter' => $chapter,

@@ -42,9 +42,21 @@ function normalize_phone_number(string $phone): ?string
 {
     $phone = preg_replace('/[\s().-]+/', '', trim($phone));
 
-    if (!is_string($phone) || !preg_match('/^\+[1-9]\d{7,14}$/D', $phone)) {
+    if (!is_string($phone) || !preg_match('/^09[0-9]{9}$/D', $phone)) {
         return null;
     }
 
     return $phone;
+}
+
+function normalize_display_name(string $name): ?string
+{
+    $name = trim($name);
+    $length = preg_match_all('/./us', $name);
+
+    if ($length === false || $length < 1 || $length > 80) {
+        return null;
+    }
+
+    return $name;
 }

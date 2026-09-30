@@ -8,8 +8,10 @@ if (empty($_SESSION['account_id'])) {
 }
 
 try {
-    $statement = database()->prepare(
-        'SELECT accounts.phone, roles.name AS role
+    $connection = database();
+    ensure_group_schema($connection);
+    $statement = $connection->prepare(
+        'SELECT accounts.display_name, roles.name AS role
          FROM accounts
          INNER JOIN roles ON roles.id = accounts.role_id
          WHERE accounts.id = :id'
@@ -27,10 +29,10 @@ if (!$account) {
     header('Location: login.php');
     exit;
 }
+$hasDisplayName = is_string($account['display_name']) && $account['display_name'] !== '';
 
 try {
-    ensure_group_schema(database());
-    $groupStatement = database()->prepare(
+    $groupStatement = $connection->prepare(
         'SELECT `groups`.id, `groups`.name, `groups`.invite_code,
                 COUNT(group_members.account_id) AS member_count
          FROM `groups`
@@ -67,7 +69,10 @@ try {
             <div>
                 <p class="eyebrow">A little space for stories</p>
                 <h1>Read Together</h1>
-                <p class="intro">Signed in as <?= escape_html($account['phone']) ?></p>
+                <p class="intro">Signed in as <?= escape_html($hasDisplayName ? $account['display_name'] : 'Reader') ?></p>
+                <a class="profile-link" href="profile.php">
+                    <?= $hasDisplayName ? 'Edit display name' : 'Set your display name' ?>
+                </a>
             </div>
             <form action="logout.php" method="post">
                 <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">

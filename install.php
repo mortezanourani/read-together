@@ -32,10 +32,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed && $error === '') {
         || !hash_equals(INSTALLATION_KEY, $_POST['installation_key'])) {
         $error = 'The installation key is incorrect.';
     } else {
-        $phone = normalize_phone_number((string) ($_POST['phone'] ?? ''));
+        $submittedPhone = $_POST['phone'] ?? '';
+        $phone = is_string($submittedPhone)
+            ? normalize_phone_number($submittedPhone)
+            : null;
 
         if ($phone === null) {
-            $error = 'Enter a valid phone number with country code, such as +14155552671.';
+            $error = 'Enter a valid 11-digit mobile number starting with 09.';
         } else {
             try {
                 install_schema($connection);
@@ -65,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed && $error === '') {
                     ]);
                     $connection->commit();
                     $installed = true;
-                    $notice = 'The Admin account was created. Remove install.php from the host, then sign in with this phone number.';
+                    $notice = 'The Admin account was created. Remove install.php from the host, then sign in with this mobile number.';
                 }
             } catch (Throwable $exception) {
                 if ($connection->inTransaction()) {
@@ -99,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed && $error === '') {
         <?php elseif ($installed): ?>
             <p class="message">An Admin account already exists. Installation is locked. Remove install.php from the host.</p>
         <?php else: ?>
-            <p class="intro">Create the first Admin account. You'll verify this phone with an OTP when signing in.</p>
+            <p class="intro">Create the first Admin account. You'll verify this mobile number with an OTP when signing in.</p>
             <form class="auth-form" method="post" action="install.php">
                 <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
                 <label for="installation_key">Installation key</label>
@@ -111,12 +114,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$installed && $error === '') {
                     type="tel"
                     inputmode="tel"
                     autocomplete="tel"
-                    placeholder="+14155552671"
-                    pattern="\+[1-9][0-9]{7,14}"
-                    maxlength="16"
+                    placeholder="09123456789"
+                    pattern="09[0-9]{9}"
+                    maxlength="11"
                     required
                 >
-                <p class="field-hint">Include your country code, for example +14155552671.</p>
+                <p class="field-hint">Enter your 11-digit mobile number starting with 09.</p>
                 <button class="button" type="submit" <?= INSTALLATION_KEY === '' ? 'disabled' : '' ?>>Create Admin account</button>
             </form>
             <?php if (INSTALLATION_KEY === ''): ?>
