@@ -78,10 +78,6 @@ try {
             </a>
         </header>
 
-        <?php if ($account['role'] === 'Admin'): ?>
-            <p class="admin-link-wrap"><a class="admin-link" href="admin/chapters.php">مدیریت فصل‌های کتاب <span aria-hidden="true">&larr;</span></a></p>
-        <?php endif; ?>
-
         <?php if (!empty($groupsUnavailable)): ?>
             <p class="message message-error" role="alert">گروه‌ها موقتاً در دسترس نیستند. دسترسی پایگاه داده برای ایجاد جدول‌ها را بررسی و دوباره تلاش کنید.</p>
         <?php endif; ?>

@@ -1,4 +1,4 @@
-const CACHE_NAME = "read-together-shell-v11";
+const CACHE_NAME = "read-together-shell-v12";
 const APP_SHELL = [
     "./offline.html",
     "./assets/css/app.css",

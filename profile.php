@@ -15,7 +15,10 @@ try {
     $connection = database();
     ensure_group_schema($connection);
     $accountQuery = $connection->prepare(
-        'SELECT id, display_name FROM accounts WHERE id = :id'
+        'SELECT accounts.id, accounts.display_name, roles.name AS role
+         FROM accounts
+         INNER JOIN roles ON roles.id = accounts.role_id
+         WHERE accounts.id = :id'
     );
     $accountQuery->execute(['id' => $_SESSION['account_id']]);
     $profile = $accountQuery->fetch();
@@ -122,6 +125,12 @@ $returnToInvite = isset($_GET['next']) && $_GET['next'] === 'invite';
                 <p class="field-hint">نامی بین ۱ تا ۸۰ نویسه انتخاب کنید. هر زمان می‌توانید آن را تغییر دهید.</p>
                 <button class="button" type="submit">ذخیره نام نمایشی</button>
             </form>
+            <?php if ($profile['role'] === 'Admin'): ?>
+                <nav class="profile-admin-actions" aria-label="ابزارهای مدیریت">
+                    <a class="admin-link" href="admin/chapters.php">مدیریت فصل‌های کتاب <span aria-hidden="true">&larr;</span></a>
+                    <a class="admin-link" href="admin/groups.php">مدیریت همه گروه‌ها <span aria-hidden="true">&larr;</span></a>
+                </nav>
+            <?php endif; ?>
         <?php elseif ($error === 'حساب کاربری شما پیدا نشد. دوباره وارد شوید.'): ?>
             <p><a class="admin-link" href="login.php">ورود دوباره</a></p>
         <?php endif; ?>
