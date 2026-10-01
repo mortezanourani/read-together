@@ -70,14 +70,12 @@ try {
                 <p class="eyebrow">جایی برای داستان‌ها</p>
                 <h1>باهم بخوانیم</h1>
                 <p class="intro">واردشده با نام <?= escape_html($hasDisplayName ? $account['display_name'] : 'خواننده') ?></p>
-                <a class="profile-link" href="profile.php">
-                    <?= $hasDisplayName ? 'ویرایش نام نمایشی' : 'انتخاب نام نمایشی' ?>
-                </a>
             </div>
-            <form action="logout.php" method="post">
-                <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
-                <button class="button button-secondary" type="submit">خروج</button>
-            </form>
+            <a class="profile-icon-button" href="profile.php" aria-label="نمایه" title="نمایه">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9Zm0 2c-4.2 0-7.5 2.1-7.5 4.75V21h15v-2.25C19.5 16.1 16.2 14 12 14Z"/>
+                </svg>
+            </a>
         </header>
 
         <?php if ($account['role'] === 'Admin'): ?>

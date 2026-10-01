@@ -125,6 +125,10 @@ $returnToInvite = isset($_GET['next']) && $_GET['next'] === 'invite';
         <?php elseif ($error === 'حساب کاربری شما پیدا نشد. دوباره وارد شوید.'): ?>
             <p><a class="admin-link" href="login.php">ورود دوباره</a></p>
         <?php endif; ?>
+        <form class="profile-logout-form" action="logout.php" method="post">
+            <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
+            <button class="button button-secondary" type="submit">خروج از حساب</button>
+        </form>
     </main>
 </body>
 </html>
