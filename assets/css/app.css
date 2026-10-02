@@ -418,6 +418,19 @@ h1 {
     margin-top: 2rem;
 }
 
+.group-settings-link {
+    display: inline-block;
+    margin-top: 0.75rem;
+    color: #315c4b;
+    font-weight: 650;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+}
+
+.group-settings-link:hover {
+    color: #20352c;
+}
+
 .section-copy {
     margin: 0.65rem 0 1rem;
     color: #68736a;

@@ -211,7 +211,6 @@ if ($group) {
     }
 }
 
-$invitationUrl = $group ? group_invitation_url($group['invite_code']) : '';
 $myTodayAssignments = array_values(array_filter(
     $todayAssignments,
     static function (array $assignment) use ($accountId): bool {
@@ -245,6 +244,9 @@ $myTodayAssignments = array_values(array_filter(
         <?php if ($group): ?>
             <p class="eyebrow">جمع کتاب‌خوانی شما</p>
             <h1><?= escape_html($group['name']) ?></h1>
+            <?php if ($group['status'] === 'setup'): ?>
+                <a class="group-settings-link" href="group_settings.php?id=<?= (int) $group['id'] ?>">تغییر نام و لینک دعوت</a>
+            <?php endif; ?>
 
             <?php if ($group['status'] === 'setup'): ?>
                 <section class="group-info-section" aria-labelledby="plan-heading">
@@ -356,24 +358,6 @@ $myTodayAssignments = array_values(array_filter(
                 <p class="admin-link-wrap"><a class="admin-link" href="group_reports.php?id=<?= (int) $group['id'] ?>">مشاهده گزارش خواندن اعضا <span aria-hidden="true">&larr;</span></a></p>
             <?php endif; ?>
 
-            <?php if ($group['status'] !== 'deactivated'): ?>
-                <section class="group-info-section" aria-labelledby="invitation-heading">
-                    <h2 id="invitation-heading">دعوت‌نامه</h2>
-                    <?php if ($group['status'] === 'setup'): ?>
-                        <p class="section-copy">پیش از آغاز دوره کتاب‌خوانی، کد یا پیوند دعوت را به اشتراک بگذارید.</p>
-                        <div class="invite-code"><?= escape_html($group['invite_code']) ?></div>
-                        <button
-                            class="button copy-invite-button"
-                            type="button"
-                            data-copy-text="<?= escape_html($invitationUrl) ?>"
-                        >کپی پیوند دعوت</button>
-                        <p class="copy-status" role="status" aria-live="polite"></p>
-                        <a class="invite-link" href="<?= escape_html($invitationUrl) ?>"><?= escape_html($invitationUrl) ?></a>
-                    <?php else: ?>
-                        <p class="section-copy">عضویت و تعداد فصل‌های روزانه در این دوره قفل شده‌اند.</p>
-                    <?php endif; ?>
-                </section>
-            <?php endif; ?>
         <?php endif; ?>
     </main>
 </body>
