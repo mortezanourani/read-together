@@ -138,6 +138,7 @@ $statusLabels = [
     <link rel="manifest" href="../manifest.webmanifest">
     <link rel="icon" href="../assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="../assets/css/app.css">
+    <script src="../assets/js/app.js" defer></script>
 </head>
 <body>
     <main class="home-page chapter-admin">
@@ -169,7 +170,7 @@ $statusLabels = [
                                     سازنده: <?= escape_html($group['creator_name'] ?: 'خواننده') ?>
                                     · <?= (int) $group['member_count'] ?> عضو
                                     · وضعیت: <?= escape_html($statusLabels[$group['status']] ?? $group['status']) ?>
-                                    · ایجادشده: <time dir="ltr" datetime="<?= escape_html($group['created_at']) ?>"><?= escape_html($group['created_at']) ?></time>
+                                    · ایجادشده: <time data-solar-date="<?= escape_html($group['created_at']) ?>" datetime="<?= escape_html(str_replace(' ', 'T', $group['created_at'])) ?>"><?= escape_html($group['created_at']) ?></time>
                                 </p>
                             </div>
                             <div class="admin-group-actions">

@@ -47,9 +47,63 @@ document.querySelectorAll("[data-copy-text]").forEach((button) => {
     });
 });
 
+function formatSolarHijriDate(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(value);
+    if (!match) {
+        return value;
+    }
+
+    const [, year, month, day, hour, minute] = match;
+    const date = new Date(Date.UTC(
+        Number(year),
+        Number(month) - 1,
+        Number(day),
+        hour === undefined ? 12 : Number(hour),
+        hour === undefined ? 0 : Number(minute)
+    ));
+    const options = {
+        calendar: "persian",
+        day: "numeric",
+        month: "long",
+        timeZone: "UTC",
+        year: "numeric"
+    };
+    if (hour !== undefined) {
+        options.hour = "2-digit";
+        options.minute = "2-digit";
+    }
+
+    return new Intl.DateTimeFormat("fa-IR-u-ca-persian", options).format(date);
+}
+
+document.querySelectorAll("[data-solar-date]").forEach((element) => {
+    const value = element.dataset.solarDate;
+    if (value) {
+        element.textContent = formatSolarHijriDate(value);
+    }
+});
+
+document.querySelectorAll("[data-solar-date-for]").forEach((output) => {
+    const input = document.querySelector(output.dataset.solarDateFor);
+    if (!(input instanceof HTMLInputElement)) {
+        return;
+    }
+
+    const updateDisplay = () => {
+        output.textContent = input.value
+            ? formatSolarHijriDate(input.value)
+            : "تاریخی انتخاب نشده است";
+    };
+    input.addEventListener("input", updateDisplay);
+    input.addEventListener("change", updateDisplay);
+    updateDisplay();
+});
+
 if ("serviceWorker" in navigator) {
+    const script = document.currentScript;
+    const serviceWorkerUrl = new URL("../../sw.js", script.src);
     window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch((error) => {
+        navigator.serviceWorker.register(serviceWorkerUrl).catch((error) => {
             console.error("Service worker registration failed:", error);
         });
     });

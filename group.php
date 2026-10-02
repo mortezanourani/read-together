@@ -314,7 +314,9 @@ $myTodayAssignments = array_merge($unreadAssignments, $readAssignments);
                 <?php $cycleDay = group_cycle_day($group, gmdate('Y-m-d')); ?>
                 <p class="cycle-summary">
                     روز <?= $cycleDay === null ? '—' : $cycleDay + 1 ?> از ۱۲۰
-                    <span>آغاز دوره: <?= escape_html($group['assignments_start_date']) ?></span>
+                    <span>آغاز دوره:
+                        <time data-solar-date="<?= escape_html($group['assignments_start_date']) ?>" datetime="<?= escape_html($group['assignments_start_date']) ?>"><?= escape_html($group['assignments_start_date']) ?></time>
+                    </span>
                 </p>
 
                 <section class="group-info-section" aria-labelledby="today-heading">

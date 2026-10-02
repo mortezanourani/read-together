@@ -1,4 +1,4 @@
-const CACHE_NAME = "read-together-shell-v14";
+const CACHE_NAME = "read-together-shell-v16";
 const APP_SHELL = [
     "./offline.html",
     "./assets/css/app.css",
@@ -46,18 +46,22 @@ self.addEventListener("fetch", (event) => {
 
     if (url.pathname.includes("/assets/")) {
         event.respondWith(
-            caches.match(request).then((cachedResponse) => {
-                if (cachedResponse) {
-                    return cachedResponse;
-                }
-                return fetch(request).then((response) => {
+            fetch(request)
+                .then((response) => {
                     if (response.ok) {
                         const copy = response.clone();
-                        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+                        event.waitUntil(
+                            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy))
+                        );
                     }
                     return response;
-                });
-            })
+                })
+                .catch(() => caches.match(request).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    throw new TypeError("No cached response is available while offline.");
+                }))
         );
     }
 });

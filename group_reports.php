@@ -10,8 +10,7 @@ $groupId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, [
     'options' => ['min_range' => 1],
 ]);
 $today = gmdate('Y-m-d');
-$requestedDate = $_GET['date'] ?? $today;
-$date = is_string($requestedDate) ? $requestedDate : '';
+$date = $today;
 $requestedPage = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, [
     'options' => ['min_range' => 1],
 ]);
@@ -24,11 +23,6 @@ $assignments = [];
 if ($groupId === false || $groupId === null) {
     http_response_code(404);
     $error = 'این گروه پیدا نشد.';
-} elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/D', $date)
-    || !valid_iso_date($date)
-    || $date > $today) {
-    http_response_code(400);
-    $error = 'تاریخی معتبر، حداکثر تا امروز، انتخاب کنید.';
 } else {
     try {
         $connection = database();
@@ -59,9 +53,6 @@ foreach ($assignments as &$assignment) {
     if ($assignment['status'] === 'read') {
         $readCount++;
         $assignment['report_status'] = 'Read';
-    } elseif ($date < $today) {
-        $missedCount++;
-        $assignment['report_status'] = 'Missed';
     } else {
         $pendingCount++;
         $assignment['report_status'] = 'Not submitted';
@@ -97,6 +88,7 @@ $pageAssignments = array_slice($assignments, ($currentPage - 1) * $perPage, $per
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="assets/icons/icon-192.svg" type="image/svg+xml">
     <link rel="stylesheet" href="assets/css/app.css">
+    <script src="assets/js/app.js" defer></script>
 </head>
 <body>
     <main class="home-page chapter-admin">
@@ -114,18 +106,8 @@ $pageAssignments = array_slice($assignments, ($currentPage - 1) * $perPage, $per
         <?php if ($error !== ''): ?>
             <p class="message message-error" role="alert"><?= escape_html($error) ?></p>
         <?php else: ?>
-            <section class="report-date-section" aria-labelledby="report-date-heading">
-                <h2 id="report-date-heading">انتخاب روز</h2>
-                <form class="report-date-form" method="get" action="group_reports.php">
-                    <input type="hidden" name="id" value="<?= (int) $group['id'] ?>">
-                    <label class="visually-hidden" for="report-date">تاریخ برنامه</label>
-                    <input id="report-date" name="date" type="date" value="<?= escape_html($date) ?>" max="<?= escape_html($today) ?>" required>
-                    <button class="button" type="submit">نمایش گزارش‌ها</button>
-                </form>
-            </section>
-
             <?php if ($assignments === []): ?>
-                <p class="message">برای این تاریخ برنامه‌ای وجود ندارد. ممکن است تاریخ پیش از آغاز یک دوره یا خارج از دوره باشد.</p>
+                <p class="message">برای امروز برنامه‌ای وجود ندارد. ممکن است دوره هنوز آغاز نشده یا به پایان رسیده باشد.</p>
             <?php else: ?>
             <section class="report-summary" aria-label="خلاصه گزارش">
                 <div><span>خوانده‌شده</span><strong><?= $readCount ?></strong></div>
@@ -134,12 +116,8 @@ $pageAssignments = array_slice($assignments, ($currentPage - 1) * $perPage, $per
             </section>
 
             <p class="report-date-label">
-                گزارش‌های تاریخ <?= escape_html($date) ?>.
-                <?php if ($date < $today): ?>
-                    فصل‌های بدون گزارش، ازدست‌رفته محسوب می‌شوند و گزارش با تأخیر پذیرفته نمی‌شود.
-                <?php else: ?>
-                    فصل‌های بدون گزارش هنوز در انتظار ثبت هستند.
-                <?php endif; ?>
+                گزارش‌های تاریخ <time data-solar-date="<?= escape_html($date) ?>" datetime="<?= escape_html($date) ?>"><?= escape_html($date) ?></time>.
+                فصل‌های بدون گزارش هنوز در انتظار ثبت هستند.
             </p>
 
             <div class="report-table-wrap">
@@ -165,11 +143,11 @@ $pageAssignments = array_slice($assignments, ($currentPage - 1) * $perPage, $per
             <?php if ($totalPages > 1): ?>
                 <nav class="admin-pagination" aria-label="صفحه‌بندی گزارش‌ها">
                     <?php if ($currentPage > 1): ?>
-                        <a href="group_reports.php?id=<?= (int) $group['id'] ?>&amp;date=<?= escape_html($date) ?>&amp;page=<?= $currentPage - 1 ?>">صفحه قبل</a>
+                        <a href="group_reports.php?id=<?= (int) $group['id'] ?>&amp;page=<?= $currentPage - 1 ?>">صفحه قبل</a>
                     <?php endif; ?>
                     <span>صفحه <?= $currentPage ?> از <?= $totalPages ?></span>
                     <?php if ($currentPage < $totalPages): ?>
-                        <a href="group_reports.php?id=<?= (int) $group['id'] ?>&amp;date=<?= escape_html($date) ?>&amp;page=<?= $currentPage + 1 ?>">صفحه بعد</a>
+                        <a href="group_reports.php?id=<?= (int) $group['id'] ?>&amp;page=<?= $currentPage + 1 ?>">صفحه بعد</a>
                     <?php endif; ?>
                 </nav>
             <?php endif; ?>

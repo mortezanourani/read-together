@@ -615,6 +615,8 @@ h1 {
 
 .report-date-form {
     display: flex;
+    align-items: center;
+    flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 0.85rem;
 }
@@ -631,6 +633,12 @@ h1 {
 
 .report-date-form .button {
     margin: 0;
+}
+
+.solar-date-display {
+    flex-basis: 100%;
+    color: #68736a;
+    font-size: 0.9rem;
 }
 
 .report-summary {
