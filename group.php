@@ -217,6 +217,19 @@ $myTodayAssignments = array_values(array_filter(
         return (int) $assignment['account_id'] === $accountId;
     }
 ));
+$unreadAssignments = array_values(array_filter(
+    $myTodayAssignments,
+    static function (array $assignment): bool {
+        return $assignment['status'] !== 'read';
+    }
+));
+$readAssignments = array_values(array_filter(
+    $myTodayAssignments,
+    static function (array $assignment): bool {
+        return $assignment['status'] === 'read';
+    }
+));
+$myTodayAssignments = array_merge($unreadAssignments, $readAssignments);
 ?>
 <!doctype html>
 <html lang="fa" dir="rtl">
@@ -315,21 +328,20 @@ $myTodayAssignments = array_values(array_filter(
                         <div class="assigned-chapters">
                             <?php foreach ($myTodayAssignments as $assignment): ?>
                                 <article class="assigned-chapter">
-                                    <p class="eyebrow">فصل <?= (int) $assignment['chapter']['chapter_number'] ?></p>
+                                    <?php if ($assignment['status'] === 'read'): ?>
+                                        <p class="report-complete">خوانده شد</p>
+                                    <?php else: ?>
+                                        <form class="chapter-read-form" method="post" action="group.php?id=<?= (int) $group['id'] ?>">
+                                            <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
+                                            <input type="hidden" name="action" value="submit_read">
+                                            <input type="hidden" name="chapter_id" value="<?= (int) $assignment['chapter']['id'] ?>">
+                                            <button class="button button-compact" type="submit">خواندم</button>
+                                        </form>
+                                    <?php endif; ?>
                                     <h3><?= escape_html($assignment['chapter']['title']) ?></h3>
                                     <p><?= nl2br(escape_html($assignment['chapter']['description'])) ?></p>
                                     <p class="chapter-boundary"><strong>آغاز:</strong> <?= nl2br(escape_html($assignment['chapter']['start_sentence'])) ?></p>
                                     <p class="chapter-boundary"><strong>پایان:</strong> <?= nl2br(escape_html($assignment['chapter']['end_sentence'])) ?></p>
-                                    <?php if ($assignment['status'] === 'read'): ?>
-                                        <p class="report-complete">گزارش خواندن ثبت شده است</p>
-                                    <?php else: ?>
-                                        <form method="post" action="group.php?id=<?= (int) $group['id'] ?>">
-                                            <input type="hidden" name="csrf_token" value="<?= escape_html(csrf_token()) ?>">
-                                            <input type="hidden" name="action" value="submit_read">
-                                            <input type="hidden" name="chapter_id" value="<?= (int) $assignment['chapter']['id'] ?>">
-                                            <button class="button" type="submit">این فصل را خواندم</button>
-                                        </form>
-                                    <?php endif; ?>
                                 </article>
                             <?php endforeach; ?>
                         </div>

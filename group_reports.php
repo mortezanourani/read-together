@@ -12,6 +12,11 @@ $groupId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT, [
 $today = gmdate('Y-m-d');
 $requestedDate = $_GET['date'] ?? $today;
 $date = is_string($requestedDate) ? $requestedDate : '';
+$requestedPage = filter_var($_GET['page'] ?? 1, FILTER_VALIDATE_INT, [
+    'options' => ['min_range' => 1],
+]);
+$currentPage = $requestedPage === false ? 1 : $requestedPage;
+$perPage = 10;
 $error = '';
 $group = false;
 $assignments = [];
@@ -63,6 +68,24 @@ foreach ($assignments as &$assignment) {
     }
 }
 unset($assignment);
+
+$unreadAssignments = array_values(array_filter(
+    $assignments,
+    static function (array $assignment): bool {
+        return $assignment['report_status'] !== 'Read';
+    }
+));
+$readAssignments = array_values(array_filter(
+    $assignments,
+    static function (array $assignment): bool {
+        return $assignment['report_status'] === 'Read';
+    }
+));
+$assignments = array_merge($unreadAssignments, $readAssignments);
+$totalAssignments = count($assignments);
+$totalPages = max(1, (int) ceil($totalAssignments / $perPage));
+$currentPage = min($currentPage, $totalPages);
+$pageAssignments = array_slice($assignments, ($currentPage - 1) * $perPage, $perPage);
 ?>
 <!doctype html>
 <html lang="fa" dir="rtl">
@@ -105,9 +128,9 @@ unset($assignment);
                 <p class="message">برای این تاریخ برنامه‌ای وجود ندارد. ممکن است تاریخ پیش از آغاز یک دوره یا خارج از دوره باشد.</p>
             <?php else: ?>
             <section class="report-summary" aria-label="خلاصه گزارش">
-                <div><strong><?= $readCount ?></strong><span>خوانده‌شده</span></div>
-                <div><strong><?= $missedCount ?></strong><span>ازدست‌رفته</span></div>
-                <div><strong><?= $pendingCount ?></strong><span>ثبت‌نشده</span></div>
+                <div><span>خوانده‌شده</span><strong><?= $readCount ?></strong></div>
+                <div><span>ازدست‌رفته</span><strong><?= $missedCount ?></strong></div>
+                <div><span>ثبت‌نشده</span><strong><?= $pendingCount ?></strong></div>
             </section>
 
             <p class="report-date-label">
@@ -124,16 +147,14 @@ unset($assignment);
                     <thead>
                         <tr>
                             <th scope="col">عضو</th>
-                            <th scope="col">فصل</th>
                             <th scope="col">عنوان</th>
                             <th scope="col">وضعیت</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($assignments as $assignment): ?>
+                        <?php foreach ($pageAssignments as $assignment): ?>
                             <tr>
                                 <td><?= escape_html($assignment['display_name']) ?></td>
-                                <td><?= (int) $assignment['chapter']['chapter_number'] ?></td>
                                 <td><?= escape_html($assignment['chapter']['title']) ?></td>
                                 <td><span class="report-status report-status-<?= strtolower(str_replace(' ', '-', $assignment['report_status'])) ?>"><?= $assignment['report_status'] === 'Read' ? 'خوانده‌شده' : ($assignment['report_status'] === 'Missed' ? 'ازدست‌رفته' : 'ثبت‌نشده') ?></span></td>
                             </tr>
@@ -141,6 +162,17 @@ unset($assignment);
                     </tbody>
                 </table>
             </div>
+            <?php if ($totalPages > 1): ?>
+                <nav class="admin-pagination" aria-label="صفحه‌بندی گزارش‌ها">
+                    <?php if ($currentPage > 1): ?>
+                        <a href="group_reports.php?id=<?= (int) $group['id'] ?>&amp;date=<?= escape_html($date) ?>&amp;page=<?= $currentPage - 1 ?>">صفحه قبل</a>
+                    <?php endif; ?>
+                    <span>صفحه <?= $currentPage ?> از <?= $totalPages ?></span>
+                    <?php if ($currentPage < $totalPages): ?>
+                        <a href="group_reports.php?id=<?= (int) $group['id'] ?>&amp;date=<?= escape_html($date) ?>&amp;page=<?= $currentPage + 1 ?>">صفحه بعد</a>
+                    <?php endif; ?>
+                </nav>
+            <?php endif; ?>
             <?php endif; ?>
         <?php endif; ?>
     </main>

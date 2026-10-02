@@ -335,8 +335,8 @@ h1 {
     font-size: 1.05rem;
 }
 
-.group-card-content > span,
-.action-copy > span {
+.group-card-content>span,
+.action-copy>span {
     color: #68736a;
     font-size: 0.9rem;
 }
@@ -357,7 +357,7 @@ h1 {
     border-top: 1px dashed #cbd4ca;
 }
 
-.home-separator + .action-grid {
+.home-separator+.action-grid {
     margin-top: 0;
 }
 
@@ -542,14 +542,12 @@ h1 {
 }
 
 .assigned-chapter {
+    position: relative;
     padding: 1.25rem;
+    /* padding-top: 3.75rem; */
     border: 1px solid #e5e2d8;
     border-radius: 0.85rem;
     background: #fffefa;
-}
-
-.assigned-chapter .eyebrow {
-    margin-bottom: 0.5rem;
 }
 
 .assigned-chapter h3 {
@@ -558,18 +556,38 @@ h1 {
     font-size: 1.35rem;
 }
 
-.assigned-chapter > p:not(.eyebrow) {
+.assigned-chapter>p:not(.eyebrow) {
     color: #5d685f;
     line-height: 1.6;
 }
 
 .assigned-chapter .chapter-boundary {
-    padding-left: 1rem;
-    border-left: 2px solid #cbd4ca;
+    padding-inline-start: 1rem;
+    border-inline-start: 2px solid #cbd4ca;
+    color: #68736a !important;
+    font-size: 0.85rem;
+    margin-bottom: 0;
+}
+
+.chapter-read-form,
+.assigned-chapter .report-complete {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    margin: 0;
+}
+
+.button-compact {
+    min-height: 2rem;
+    margin: 0;
+    padding: 0.35rem 0.7rem;
+    border-radius: 0.45rem;
+    font-size: 0.85rem;
 }
 
 .report-complete {
     color: #315c4b !important;
+    font-size: 0.85rem;
     font-weight: 700;
 }
 
@@ -617,13 +635,15 @@ h1 {
 
 .report-summary {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(1, 1fr);
     gap: 0.75rem;
 }
 
-.report-summary > div {
-    display: grid;
-    gap: 0.3rem;
+.report-summary>div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     padding: 1rem;
     border: 1px solid #e5e2d8;
     border-radius: 0.7rem;
