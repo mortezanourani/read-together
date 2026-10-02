@@ -340,8 +340,8 @@ $myTodayAssignments = array_merge($unreadAssignments, $readAssignments);
                                     <?php endif; ?>
                                     <h3><?= escape_html($assignment['chapter']['title']) ?></h3>
                                     <p><?= nl2br(escape_html($assignment['chapter']['description'])) ?></p>
-                                    <p class="chapter-boundary"><strong>آغاز:</strong> <?= nl2br(escape_html($assignment['chapter']['start_sentence'])) ?></p>
-                                    <p class="chapter-boundary"><strong>پایان:</strong> <?= nl2br(escape_html($assignment['chapter']['end_sentence'])) ?></p>
+                                    <p class="chapter-boundary"><strong>از </strong> <?= nl2br(escape_html($assignment['chapter']['start_sentence'])) ?></p>
+                                    <p class="chapter-boundary"><strong>تا </strong> <?= nl2br(escape_html($assignment['chapter']['end_sentence'])) ?></p>
                                 </article>
                             <?php endforeach; ?>
                         </div>
