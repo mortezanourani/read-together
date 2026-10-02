@@ -109,6 +109,8 @@ try {
             <?php endif; ?>
         </section>
 
+        <hr class="home-separator" aria-hidden="true">
+
         <section class="action-grid" aria-label="اقدام‌های گروه">
             <a class="action-card action-card-create" href="create_group.php">
                 <span class="action-icon" aria-hidden="true">+</span>

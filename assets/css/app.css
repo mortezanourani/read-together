@@ -351,6 +351,16 @@ h1 {
     margin-top: 1.25rem;
 }
 
+.home-separator {
+    margin: 2rem 0 1.5rem;
+    border: 0;
+    border-top: 1px dashed #cbd4ca;
+}
+
+.home-separator + .action-grid {
+    margin-top: 0;
+}
+
 .action-card {
     align-items: flex-start;
     flex-wrap: wrap;
