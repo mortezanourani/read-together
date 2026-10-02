@@ -34,11 +34,16 @@ $hasDisplayName = is_string($account['display_name']) && $account['display_name'
 try {
     $groupStatement = $connection->prepare(
         'SELECT `groups`.id, `groups`.name, `groups`.invite_code,
-                COUNT(group_members.account_id) AS member_count
+                (SELECT COUNT(*)
+                 FROM group_members AS all_members
+                 WHERE all_members.group_id = `groups`.id) AS member_count
          FROM `groups`
-         INNER JOIN group_members ON group_members.group_id = `groups`.id
-         WHERE group_members.account_id = :account_id AND `groups`.status <> \'deactivated\'
-         GROUP BY `groups`.id, `groups`.name, `groups`.invite_code
+         WHERE `groups`.status <> \'deactivated\'
+           AND EXISTS (
+               SELECT 1 FROM group_members AS current_members
+               WHERE current_members.group_id = `groups`.id
+                 AND current_members.account_id = :account_id
+           )
          ORDER BY `groups`.name'
     );
     $groupStatement->execute(['account_id' => $_SESSION['account_id']]);

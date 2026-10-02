@@ -162,6 +162,128 @@ function group_cycle_day(array $group, string $assignmentDate): ?int
     return $days < 120 ? $days : null;
 }
 
+function ensure_active_group_cycle_snapshot(
+    PDO $connection,
+    int $groupId,
+    string $assignmentDate
+): void {
+    $connection->beginTransaction();
+
+    try {
+        $groupQuery = $connection->prepare(
+            'SELECT status, created_by, cycle_number, assignments_start_date
+             FROM `groups` WHERE id = :id FOR UPDATE'
+        );
+        $groupQuery->execute(['id' => $groupId]);
+        $group = $groupQuery->fetch();
+        if (!$group || $group['status'] !== 'active'
+            || empty($group['assignments_start_date'])
+            || group_cycle_day(
+                ['assignments_start_date' => $group['assignments_start_date']],
+                $assignmentDate
+            ) === null) {
+            $connection->commit();
+            return;
+        }
+
+        $cycleNumber = max(1, (int) $group['cycle_number']);
+        $createCycle = $connection->prepare(
+            "INSERT IGNORE INTO group_cycles (group_id, cycle_number, starts_on, status)
+             VALUES (:group_id, :cycle_number, :starts_on, 'active')"
+        );
+        $createCycle->execute([
+            'group_id' => $groupId,
+            'cycle_number' => $cycleNumber,
+            'starts_on' => $group['assignments_start_date'],
+        ]);
+
+        $memberCountQuery = $connection->prepare(
+            'SELECT COUNT(*) FROM group_members WHERE group_id = :group_id'
+        );
+        $memberCountQuery->execute(['group_id' => $groupId]);
+        $memberCount = (int) $memberCountQuery->fetchColumn();
+        $snapshotCountQuery = $connection->prepare(
+            'SELECT COUNT(*) FROM group_cycle_members
+             WHERE group_id = :group_id AND cycle_number = :cycle_number'
+        );
+        $snapshotCountQuery->execute([
+            'group_id' => $groupId,
+            'cycle_number' => $cycleNumber,
+        ]);
+        $snapshotCount = (int) $snapshotCountQuery->fetchColumn();
+
+        if ($snapshotCount !== $memberCount) {
+            $membersQuery = $connection->prepare(
+                'SELECT account_id, daily_chapter_count
+                 FROM group_members
+                 WHERE group_id = :group_id
+                 ORDER BY (account_id = :creator_id) DESC, joined_at, account_id'
+            );
+            $membersQuery->execute([
+                'group_id' => $groupId,
+                'creator_id' => $group['created_by'],
+            ]);
+            $members = $membersQuery->fetchAll();
+            $dailyTotal = 0;
+            $hasInvalidCount = false;
+            foreach ($members as $member) {
+                if ($member['daily_chapter_count'] === null
+                    || (int) $member['daily_chapter_count'] < 1) {
+                    $hasInvalidCount = true;
+                }
+                $dailyTotal += (int) $member['daily_chapter_count'];
+            }
+
+            if ($memberCount < 2 || count($members) !== $memberCount
+                || $dailyTotal !== 120
+                || $hasInvalidCount) {
+                $connection->commit();
+                return;
+            }
+
+            $removeSnapshot = $connection->prepare(
+                'DELETE FROM group_cycle_members
+                 WHERE group_id = :group_id AND cycle_number = :cycle_number'
+            );
+            $removeSnapshot->execute([
+                'group_id' => $groupId,
+                'cycle_number' => $cycleNumber,
+            ]);
+            $insertSnapshot = $connection->prepare(
+                'INSERT INTO group_cycle_members
+                    (group_id, cycle_number, account_id, member_order, daily_chapter_count)
+                 VALUES (:group_id, :cycle_number, :account_id, :member_order, :daily_count)'
+            );
+            foreach ($members as $index => $member) {
+                $insertSnapshot->execute([
+                    'group_id' => $groupId,
+                    'cycle_number' => $cycleNumber,
+                    'account_id' => $member['account_id'],
+                    'member_order' => $index + 1,
+                    'daily_count' => $member['daily_chapter_count'],
+                ]);
+            }
+        }
+
+        if ((int) $group['cycle_number'] !== $cycleNumber) {
+            $updateCycleNumber = $connection->prepare(
+                'UPDATE `groups` SET cycle_number = :cycle_number WHERE id = :id'
+            );
+            $updateCycleNumber->execute([
+                'cycle_number' => $cycleNumber,
+                'id' => $groupId,
+            ]);
+        }
+
+        $connection->commit();
+    } catch (Throwable $exception) {
+        if ($connection->inTransaction()) {
+            $connection->rollBack();
+        }
+        throw $exception;
+    }
+}
+
 function assignments_for_group_date(
     PDO $connection,
     int $groupId,
@@ -170,39 +292,118 @@ function assignments_for_group_date(
     $cycleQuery = $connection->prepare(
         'SELECT cycle_number, starts_on FROM group_cycles
          WHERE group_id = :group_id
-           AND starts_on <= :assignment_date
-           AND DATE_ADD(starts_on, INTERVAL 119 DAY) >= :assignment_date
+           AND starts_on <= :date_start
+           AND DATE_ADD(starts_on, INTERVAL 119 DAY) >= :date_end
          ORDER BY cycle_number DESC LIMIT 1'
     );
     $cycleQuery->execute([
         'group_id' => $groupId,
-        'assignment_date' => $assignmentDate,
+        'date_start' => $assignmentDate,
+        'date_end' => $assignmentDate,
     ]);
     $cycle = $cycleQuery->fetch();
+    $useCurrentMembers = false;
+
+    if (!$cycle) {
+        $activeGroupQuery = $connection->prepare(
+            "SELECT GREATEST(cycle_number, 1) AS cycle_number,
+                    assignments_start_date AS starts_on
+             FROM `groups`
+             WHERE id = :group_id
+               AND status IN ('active', 'completed')
+               AND assignments_start_date IS NOT NULL
+               AND assignments_start_date <= :date_start
+               AND DATE_ADD(assignments_start_date, INTERVAL 119 DAY) >= :date_end"
+        );
+        $activeGroupQuery->execute([
+            'group_id' => $groupId,
+            'date_start' => $assignmentDate,
+            'date_end' => $assignmentDate,
+        ]);
+        $cycle = $activeGroupQuery->fetch();
+        $useCurrentMembers = (bool) $cycle;
+    }
+
     if (!$cycle) {
         return [];
     }
+
+    $currentGroupQuery = $connection->prepare(
+        'SELECT status, cycle_number FROM `groups` WHERE id = :group_id'
+    );
+    $currentGroupQuery->execute(['group_id' => $groupId]);
+    $currentGroup = $currentGroupQuery->fetch();
+    $isCurrentCycle = $currentGroup
+        && in_array($currentGroup['status'], ['active', 'completed'], true)
+        && (int) $currentGroup['cycle_number'] === (int) $cycle['cycle_number'];
+    $useCurrentMembers = $useCurrentMembers || $isCurrentCycle;
 
     $day = group_cycle_day(['assignments_start_date' => $cycle['starts_on']], $assignmentDate);
     if ($day === null) {
         return [];
     }
 
-    $membersQuery = $connection->prepare(
-        "SELECT accounts.id AS account_id,
-                COALESCE(NULLIF(accounts.display_name, ''), 'خواننده') AS display_name,
-                group_cycle_members.daily_chapter_count
-         FROM group_cycle_members
-         INNER JOIN accounts ON accounts.id = group_cycle_members.account_id
-         WHERE group_cycle_members.group_id = :group_id
-           AND group_cycle_members.cycle_number = :cycle_number
-         ORDER BY group_cycle_members.member_order"
-    );
-    $membersQuery->execute([
-        'group_id' => $groupId,
-        'cycle_number' => $cycle['cycle_number'],
-    ]);
-    $members = $membersQuery->fetchAll();
+    if (!$useCurrentMembers) {
+        $membersQuery = $connection->prepare(
+            "SELECT accounts.id AS account_id,
+                    COALESCE(NULLIF(accounts.display_name, ''), 'خواننده') AS display_name,
+                    group_cycle_members.daily_chapter_count
+             FROM group_cycle_members
+             INNER JOIN accounts ON accounts.id = group_cycle_members.account_id
+             WHERE group_cycle_members.group_id = :group_id
+               AND group_cycle_members.cycle_number = :cycle_number
+             ORDER BY group_cycle_members.member_order"
+        );
+        $membersQuery->execute([
+            'group_id' => $groupId,
+            'cycle_number' => $cycle['cycle_number'],
+        ]);
+        $members = $membersQuery->fetchAll();
+        if ($isCurrentCycle) {
+            $memberCountQuery = $connection->prepare(
+                'SELECT COUNT(*) FROM group_members WHERE group_id = :group_id'
+            );
+            $memberCountQuery->execute(['group_id' => $groupId]);
+            $useCurrentMembers = $useCurrentMembers
+                || count($members) !== (int) $memberCountQuery->fetchColumn();
+        }
+    }
+
+    if ($useCurrentMembers) {
+        $membersQuery = $connection->prepare(
+            "SELECT accounts.id AS account_id,
+                    COALESCE(NULLIF(accounts.display_name, ''), 'خواننده') AS display_name,
+                    group_members.daily_chapter_count
+             FROM group_members
+             INNER JOIN accounts ON accounts.id = group_members.account_id
+             WHERE group_members.group_id = :group_id
+             ORDER BY (accounts.id = (
+                 SELECT created_by FROM `groups` WHERE id = :group_id_for_creator
+             )) DESC, group_members.joined_at, accounts.id"
+        );
+        $membersQuery->execute([
+            'group_id' => $groupId,
+            'group_id_for_creator' => $groupId,
+        ]);
+        $members = $membersQuery->fetchAll();
+    }
+
+    if ($members === []) {
+        return [];
+    }
+
+    $totalDailyChapters = 0;
+    foreach ($members as $member) {
+        if ($member['daily_chapter_count'] === null
+            || (int) $member['daily_chapter_count'] < 1) {
+            return [];
+        }
+        $totalDailyChapters += (int) $member['daily_chapter_count'];
+    }
+    if ($totalDailyChapters !== 120) {
+        return [];
+    }
+
     $chapters = $connection->query(
         'SELECT id, chapter_number, title, description, start_sentence, end_sentence
          FROM chapters WHERE chapter_number BETWEEN 1 AND 120
